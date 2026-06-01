@@ -63,6 +63,16 @@ namespace math_combat.Properties {
         /// <summary>
         ///   查詢類型 System.Byte[] 的當地語系化資源。
         /// </summary>
+        internal static byte[] _930ru_alqfa_001 {
+            get {
+                object obj = ResourceManager.GetObject("930ru-alqfa-001", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Byte[] 的當地語系化資源。
+        /// </summary>
         internal static byte[] jf_openhuninn_2_1 {
             get {
                 object obj = ResourceManager.GetObject("jf-openhuninn-2.1", resourceCulture);

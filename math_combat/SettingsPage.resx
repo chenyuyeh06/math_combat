@@ -117,12 +117,4 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="930ru-alqfa-001" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\930ru-alqfa-001.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="jf-openhuninn-2.1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\jf-openhuninn-2.1.ttf;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-    <comment>字體</comment>
-  </data>
 </root>
