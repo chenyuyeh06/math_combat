@@ -15,6 +15,7 @@ namespace math_combat
 {
     public partial class HomePage : Form
     {
+        private SettingsPage settingPage;
         private PrivateFontCollection privateFonts = new PrivateFontCollection();
         public HomePage()
         {
@@ -23,7 +24,9 @@ namespace math_combat
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            this.settingPage = new SettingsPage(this);
             LoadFontFromResource();
+
 
             enter_game.FlatStyle = FlatStyle.Flat;
             button2.FlatStyle = FlatStyle.Flat;
@@ -40,7 +43,7 @@ namespace math_combat
             // 傳入：(物件, 圓角半徑, 平時字體顏色, 滑鼠滑過字體顏色)
             MakeFancyControl(enter_game, 10, Color.White, Color.Maroon);
             MakeFancyControl(button2, 1, Color.Black, Color.White);
-           MakeFancyControl(button3, 1, Color.Black, Color.White);
+            MakeFancyControl(button3, 1, Color.Black, Color.White);
             MakeFancyControl(button4, 1, Color.Maroon, Color.FromArgb(25, 156, 124));
             MakeFancyControl(button5, 10, Color.Maroon, Color.FromArgb(25, 156, 124));
 
@@ -83,7 +86,11 @@ namespace math_combat
 
         private void button3_Click(object sender, EventArgs e)
         {
-            
+            this.Hide();
+            settingPage.Show(this);
+
+            settingPage.StartPosition = FormStartPosition.CenterScreen;
+            settingPage.Location = this.Location;
         }
 
         private void button1_Paint(object sender, PaintEventArgs e)
