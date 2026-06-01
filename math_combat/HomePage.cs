@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Text;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -13,9 +15,7 @@ namespace math_combat
 {
     public partial class HomePage : Form
     {
-        // 宣告一個私有的 PrivateFontCollection 來存放字體
         private PrivateFontCollection privateFonts = new PrivateFontCollection();
-        private Font customFont;
         public HomePage()
         {
             InitializeComponent();
@@ -23,27 +23,40 @@ namespace math_combat
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            LoadCustomFont();
+            LoadFontFromResource();
 
-            // 套用字體給指定的控制項
-            button1.Font = new Font(privateFonts.Families[0], 20, FontStyle.Regular);
-            label1.Font = new Font(privateFonts.Families[0], 15, FontStyle.Regular);
+            // 按鈕圓角
+            MakeRoundedControl(button1, 10);
+
+            // 傳入：(物件, 圓角半徑, 平時字體顏色, 滑鼠滑過字體顏色)
+            MakeFancyControl(button1, 10, Color.White, Color.Maroon);
+            MakeFancyControl(button2, 10, Color.Black, Color.White);
+            MakeFancyControl(button3, 10, Color.Black, Color.White);
+            MakeFancyControl(button4, 10, Color.Maroon, Color.FromArgb(25, 156, 124));
+
         }
 
         //載入字體
-        private void LoadCustomFont()
+        private void LoadFontFromResource()
         {
-            // 字體檔案放在輸出的資料夾路徑
-            string fontPath = System.IO.Path.Combine(Application.StartupPath, "jf-openhuninn-2.1.ttf");
-
             try
             {
-                // 將字體檔案載入到 privateFonts 集合中
-                privateFonts.AddFontFile(fontPath);
+                // 直接從資源檔撈出字體的 byte 陣列
+                byte[] fontData = Properties.Resources.jf_openhuninn_2_1;
+
+                // 在記憶體中配置空間並複製資料
+                IntPtr fontPtr = Marshal.AllocCoTaskMem(fontData.Length);
+                Marshal.Copy(fontData, 0, fontPtr, fontData.Length);
+
+                // 將記憶體中的字體資料註冊到私有字體庫中
+                privateFonts.AddMemoryFont(fontPtr, fontData.Length);
+
+                // 釋放記憶體指標
+                Marshal.FreeCoTaskMem(fontPtr);
             }
             catch (Exception ex)
             {
-                MessageBox.Show("字體載入失敗: " + ex.Message);
+                MessageBox.Show("從資源載入字體失敗: " + ex.Message);
             }
         }
         private void button1_Click(object sender, EventArgs e)
@@ -65,27 +78,70 @@ namespace math_combat
 
         private void button1_Paint(object sender, PaintEventArgs e)
         {
-            Button btn = (Button)sender;
 
-            // 設定圓角半徑（數字越大越圓）
-            int borderRadius = 5;
-
-            // 啟用抗鋸齒，讓圓角邊緣看起來更平滑
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-
-            // 建立一個圓角矩形的路徑
-            System.Drawing.Drawing2D.GraphicsPath path = new System.Drawing.Drawing2D.GraphicsPath();
-            path.StartFigure();
-            path.AddArc(0, 0, borderRadius, borderRadius, 180, 90); // 左上角
-            path.AddArc(btn.Width - borderRadius, 0, borderRadius, borderRadius, 270, 90); // 右上角
-            path.AddArc(btn.Width - borderRadius, btn.Height - borderRadius, borderRadius, borderRadius, 0, 90); // 右下角
-            path.AddArc(0, btn.Height - borderRadius, borderRadius, borderRadius, 90, 90); // 左下角
-            path.CloseFigure();
-
-            // 關鍵：將按鈕的形狀裁剪成我們設定的圓角路徑
-            btn.Region = new Region(path);
 
         }
+
+        private void button4_Click(object sender, EventArgs e)
+        {
+            DialogResult result = MessageBox.Show("確定要結束遊戲嗎？", "離開遊戲", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            // 如果玩家點擊了「是」
+            if (result == DialogResult.Yes)
+            {
+                // 結束整個應用程式
+                Application.Exit();
+            }
+        }
+
+        private void button4_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        public static void MakeRoundedControl(Control ctrl, int radius)
+        {
+            // 自動幫傳進來的物件綁定 Paint 事件
+            ctrl.Paint += (sender, e) =>
+            {
+                Control c = (Control)sender;
+                int r = radius;
+
+                e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+                System.Drawing.Drawing2D.GraphicsPath path = new System.Drawing.Drawing2D.GraphicsPath();
+                path.StartFigure();
+                path.AddArc(0, 0, 2 * r, 2 * r, 180, 90);
+                path.AddArc(c.Width - 2 * r, 0, 2 * r, 2 * r, 270, 90);
+                path.AddArc(c.Width - 2 * r, c.Height - 2 * r, 2 * r, 2 * r, 0, 90);
+                path.AddArc(0, c.Height - 2 * r, 2 * r, 2 * r, 90, 90);
+                path.CloseFigure();
+
+                c.Region = new Region(path);
+            };
+        }
+
+        public static void MakeFancyControl(Control ctrl, int radius, Color normalColor, Color hoverColor)
+        {
+
+            // 滑鼠滑入時改字體顏色
+            ctrl.MouseEnter += (sender, e) =>
+            {
+                ctrl.ForeColor = hoverColor;
+            };
+
+            //滑鼠離開時回復字體顏色
+            ctrl.MouseLeave += (sender, e) =>
+            {
+                ctrl.ForeColor = normalColor;
+            };
+        }
+
+        private void button4_MouseClick(object sender, MouseEventArgs e)
+        {
+
+        }
+
 
     }
 }
