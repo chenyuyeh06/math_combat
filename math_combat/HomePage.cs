@@ -24,8 +24,8 @@ namespace math_combat
 
         private void Form1_Load(object sender, EventArgs e)
         {
+            //創建新視窗
             this.settingPage = new SettingsPage(this);
-            LoadFontFromResource();
 
 
             enter_game.FlatStyle = FlatStyle.Flat;

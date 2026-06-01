@@ -26,15 +26,25 @@ namespace math_combat
 
         }
 
-        private void SettingsPage_FormClosed(object sender, FormClosedEventArgs e)
+        private void Form2_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (homePage != null)
+            if (e.CloseReason == CloseReason.UserClosing)
             {
+                // 1. 攔截並取消 Windows 的關閉程序，不讓它死掉
+                e.Cancel = true;
+
+                // 2. 複製目前 Form2 的位置與大小給主畫面
+                if (homePage != null)
+                {
+                    homePage.Location = this.Location;
+
+                    // 3. 顯示主畫面
+                    homePage.Show();
+                }
+
                 this.Hide();
-                homePage.Show();
-                homePage.Location = this.Location; // 保持位置一致
             }
-        }   
+        }
 
         private void bgm_control_Click(object sender, EventArgs e)
         {

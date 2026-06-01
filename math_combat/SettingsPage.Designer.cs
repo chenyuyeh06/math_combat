@@ -56,9 +56,9 @@
             this.button1.FlatAppearance.BorderSize = 0;
             this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.button1.Font = new System.Drawing.Font("jf open 粉圓 2.1", 15F);
-            this.button1.Location = new System.Drawing.Point(37, 38);
+            this.button1.Location = new System.Drawing.Point(34, 33);
             this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(99, 44);
+            this.button1.Size = new System.Drawing.Size(142, 67);
             this.button1.TabIndex = 1;
             this.button1.Text = "< 返回";
             this.button1.UseVisualStyleBackColor = false;
@@ -146,7 +146,7 @@
             this.bgm_control.Font = new System.Drawing.Font("jf open 粉圓 2.1", 19.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.bgm_control.Location = new System.Drawing.Point(558, 166);
             this.bgm_control.Name = "bgm_control";
-            this.bgm_control.Size = new System.Drawing.Size(80, 39);
+            this.bgm_control.Size = new System.Drawing.Size(77, 38);
             this.bgm_control.TabIndex = 8;
             this.bgm_control.Text = "100";
             this.bgm_control.Click += new System.EventHandler(this.bgm_control_Click);
@@ -158,7 +158,7 @@
             this.sfx_control.Font = new System.Drawing.Font("jf open 粉圓 2.1", 19.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.sfx_control.Location = new System.Drawing.Point(558, 261);
             this.sfx_control.Name = "sfx_control";
-            this.sfx_control.Size = new System.Drawing.Size(80, 39);
+            this.sfx_control.Size = new System.Drawing.Size(77, 38);
             this.sfx_control.TabIndex = 9;
             this.sfx_control.Text = "100";
             this.sfx_control.Click += new System.EventHandler(this.sfx_control_Click);
@@ -181,7 +181,7 @@
             this.Controls.Add(this.pictureBox1);
             this.Name = "SettingsPage";
             this.Text = "SettingsPage";
-            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.SettingsPage_FormClosed);
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form2_FormClosing);
             this.Load += new System.EventHandler(this.SettingsPage_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
