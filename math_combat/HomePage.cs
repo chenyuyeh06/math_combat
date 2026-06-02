@@ -33,10 +33,13 @@ namespace math_combat
 
         private void Form1_Load(object sender, EventArgs e)
         {
+
+            //
+            this.StartPosition = FormStartPosition.CenterScreen;
+
             //創建新視窗
 
             enter_game.FlatStyle = FlatStyle.Flat;
-            
             button2.FlatStyle = FlatStyle.Flat;
             volumnSettingsButton.FlatStyle = FlatStyle.Flat;
             button4.FlatStyle = FlatStyle.Flat;
@@ -53,9 +56,9 @@ namespace math_combat
             
 
             // 傳入：(物件, 圓角半徑, 平時字體顏色, 滑鼠滑過字體顏色)
-            MakeFancyControl(enter_game, 10, Color.White, Color.Maroon);
-            MakeFancyControl(button2, 1, Color.Black, Color.White);
-            MakeFancyControl(volumnSettingsButton, 1, Color.Black, Color.White);
+            MakeFancyControl(enter_game, 10, Color.WhiteSmoke, Color.White);
+            MakeFancyControl(button2, 1, Color.Black, Color.WhiteSmoke);
+            MakeFancyControl(volumnSettingsButton, 1, Color.Black, Color.WhiteSmoke);
             MakeFancyControl(button4, 1, Color.Maroon, Color.FromArgb(25, 156, 124));
             MakeFancyControl(button5, 10, Color.Maroon, Color.FromArgb(25, 156, 124));
 
@@ -202,14 +205,14 @@ namespace math_combat
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            // 1. 每次觸發，文字的 X 座標就減 3 像素（向左移動）
-            labelMarquee.Location = new Point(labelMarquee.Location.X - 3, labelMarquee.Location.Y);
+            // 向左移動
+            labelMarquee.Location = new Point(labelMarquee.Location.X - 8, labelMarquee.Location.Y);
 
-            // 2. 判斷文字是不是已經「完全走出左邊邊界」了
+            // 判斷文字是不是已經「完全走出左邊邊界」了
             // labelMarquee.Width 是文字本身的寬度，變成負數代表整串字都隱形了
             if (labelMarquee.Location.X + labelMarquee.Width < 0)
             {
-                // 3. 讓文字重回最右邊（this.ClientSize.Width 是主表單的總寬度）
+                //讓文字重回最右邊（this.ClientSize.Width 是主表單的總寬度）
                 labelMarquee.Location = new Point(this.ClientSize.Width + 10, labelMarquee.Location.Y);
             }
         }
