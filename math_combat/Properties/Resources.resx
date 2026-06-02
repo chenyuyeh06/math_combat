@@ -121,6 +121,12 @@
   <data name="930ru-alqfa-001" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\930ru-alqfa-001.ico;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="Crown1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Crown (1).png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Crown2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Crown (3).png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="jf-openhuninn-2.1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\jf-openhuninn-2.1.ttf;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     <comment>字體</comment>
@@ -130,6 +136,9 @@
   </data>
   <data name="Plus Math" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Plus Math.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Prize1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Prize (1).png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="Subtract" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Subtract.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>

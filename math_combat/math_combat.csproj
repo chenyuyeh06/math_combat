@@ -52,6 +52,7 @@
     <Compile Include="GamePage.Designer.cs">
       <DependentUpon>GamePage.cs</DependentUpon>
     </Compile>
+    <Compile Include="GameUnits.cs" />
     <Compile Include="HomePage.cs">
       <SubType>Form</SubType>
     </Compile>

@@ -34,7 +34,6 @@
             this.enter_game = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.volumnSettingsButton = new System.Windows.Forms.Button();
-            this.button4 = new System.Windows.Forms.Button();
             this.button5 = new System.Windows.Forms.Button();
             this.label6 = new System.Windows.Forms.Label();
             this.game_rule = new System.Windows.Forms.Panel();
@@ -53,13 +52,14 @@
             this.SFX = new System.Windows.Forms.Label();
             this.bgm_control = new System.Windows.Forms.Label();
             this.BGM = new System.Windows.Forms.Label();
-            this.button1 = new System.Windows.Forms.Button();
             this.sfx_plus = new System.Windows.Forms.Button();
             this.sfx_sub = new System.Windows.Forms.Button();
             this.bgm_sub = new System.Windows.Forms.Button();
             this.bgm_plus = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
             this.pictureBox3 = new System.Windows.Forms.PictureBox();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
+            this.button4 = new System.Windows.Forms.Button();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.game_rule.SuspendLayout();
             this.input_room_number.SuspendLayout();
@@ -138,25 +138,6 @@
             this.volumnSettingsButton.Text = ">  音效設定";
             this.volumnSettingsButton.UseVisualStyleBackColor = false;
             this.volumnSettingsButton.Click += new System.EventHandler(this.button3_Click);
-            // 
-            // button4
-            // 
-            this.button4.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.button4.FlatAppearance.BorderColor = System.Drawing.Color.Maroon;
-            this.button4.FlatAppearance.BorderSize = 0;
-            this.button4.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button4.Font = new System.Drawing.Font("jf open 粉圓 2.1", 30F);
-            this.button4.ForeColor = System.Drawing.Color.Maroon;
-            this.button4.Image = global::math_combat.Properties.Resources.Multiplication;
-            this.button4.Location = new System.Drawing.Point(817, 380);
-            this.button4.Name = "button4";
-            this.button4.Size = new System.Drawing.Size(79, 75);
-            this.button4.TabIndex = 5;
-            this.button4.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.button4.UseVisualStyleBackColor = false;
-            this.button4.Click += new System.EventHandler(this.button4_Click);
-            this.button4.Paint += new System.Windows.Forms.PaintEventHandler(this.button4_Paint);
-            this.button4.MouseClick += new System.Windows.Forms.MouseEventHandler(this.button4_MouseClick);
             // 
             // button5
             // 
@@ -375,21 +356,6 @@
             this.BGM.TabIndex = 9;
             this.BGM.Text = "背景音樂";
             // 
-            // button1
-            // 
-            this.button1.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.button1.FlatAppearance.BorderSize = 0;
-            this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.button1.ForeColor = System.Drawing.Color.Maroon;
-            this.button1.Image = global::math_combat.Properties.Resources.Multiplication;
-            this.button1.Location = new System.Drawing.Point(153, 274);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(66, 49);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "X";
-            this.button1.UseVisualStyleBackColor = false;
-            this.button1.Click += new System.EventHandler(this.button1_Click_1);
-            // 
             // sfx_plus
             // 
             this.sfx_plus.BackColor = System.Drawing.Color.WhiteSmoke;
@@ -443,6 +409,21 @@
             this.bgm_plus.UseVisualStyleBackColor = false;
             this.bgm_plus.Click += new System.EventHandler(this.bgm_plus_Click);
             // 
+            // button1
+            // 
+            this.button1.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.button1.FlatAppearance.BorderSize = 0;
+            this.button1.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.button1.ForeColor = System.Drawing.Color.Maroon;
+            this.button1.Image = global::math_combat.Properties.Resources.Multiplication;
+            this.button1.Location = new System.Drawing.Point(153, 274);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(66, 49);
+            this.button1.TabIndex = 0;
+            this.button1.Text = "X";
+            this.button1.UseVisualStyleBackColor = false;
+            this.button1.Click += new System.EventHandler(this.button1_Click_1);
+            // 
             // pictureBox3
             // 
             this.pictureBox3.BackColor = System.Drawing.Color.WhiteSmoke;
@@ -462,6 +443,25 @@
             this.pictureBox2.TabStop = false;
             this.pictureBox2.Click += new System.EventHandler(this.pictureBox2_Click);
             // 
+            // button4
+            // 
+            this.button4.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.button4.FlatAppearance.BorderColor = System.Drawing.Color.Maroon;
+            this.button4.FlatAppearance.BorderSize = 0;
+            this.button4.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.button4.Font = new System.Drawing.Font("jf open 粉圓 2.1", 30F);
+            this.button4.ForeColor = System.Drawing.Color.Maroon;
+            this.button4.Image = global::math_combat.Properties.Resources.Multiplication;
+            this.button4.Location = new System.Drawing.Point(817, 380);
+            this.button4.Name = "button4";
+            this.button4.Size = new System.Drawing.Size(79, 75);
+            this.button4.TabIndex = 5;
+            this.button4.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.button4.UseVisualStyleBackColor = false;
+            this.button4.Click += new System.EventHandler(this.button4_Click);
+            this.button4.Paint += new System.Windows.Forms.PaintEventHandler(this.button4_Paint);
+            this.button4.MouseClick += new System.Windows.Forms.MouseEventHandler(this.button4_MouseClick);
+            // 
             // pictureBox1
             // 
             this.pictureBox1.Anchor = System.Windows.Forms.AnchorStyles.None;
@@ -480,7 +480,6 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Maroon;
             this.ClientSize = new System.Drawing.Size(942, 493);
-            this.Controls.Add(this.button2);
             this.Controls.Add(this.enter_game);
             this.Controls.Add(this.volumn_settings);
             this.Controls.Add(this.input_player_name);
@@ -491,6 +490,7 @@
             this.Controls.Add(this.volumnSettingsButton);
             this.Controls.Add(this.title);
             this.Controls.Add(this.pictureBox1);
+            this.Controls.Add(this.button2);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximumSize = new System.Drawing.Size(960, 540);
             this.MinimumSize = new System.Drawing.Size(960, 540);

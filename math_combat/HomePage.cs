@@ -46,26 +46,25 @@ namespace math_combat
             button5.FlatStyle = FlatStyle.Flat;
 
             // 圓角
-            MakeRoundedControl(game_rule, 20);
-            MakeRoundedControl(input_room_number, 20);
-            MakeRoundedControl(input_player_name, 20);
-            MakeRoundedControl(pictureBox1, 15);
-            MakeRoundedControl(pictureBox2, 15);
-            MakeRoundedControl(pictureBox3, 15);
-            MakeRoundedControl(volumn_settings, 20);
+            GameUnits.MakeRoundedControl(game_rule, 20);
+            GameUnits.MakeRoundedControl(input_room_number, 20);
+            GameUnits.MakeRoundedControl(input_player_name, 20);
+            GameUnits.MakeRoundedControl(pictureBox1, 15);
+            GameUnits.MakeRoundedControl(pictureBox2, 15);
+            GameUnits.MakeRoundedControl(pictureBox3, 15);
+            GameUnits.MakeRoundedControl(volumn_settings, 20);
             
 
             // 傳入：(物件, 圓角半徑, 平時字體顏色, 滑鼠滑過字體顏色)
-            MakeFancyControl(enter_game, 10, Color.WhiteSmoke, Color.White);
-            MakeFancyControl(button2, 1, Color.Black, Color.WhiteSmoke);
-            MakeFancyControl(volumnSettingsButton, 1, Color.Black, Color.WhiteSmoke);
-            MakeFancyControl(button4, 1, Color.Maroon, Color.FromArgb(25, 156, 124));
-            MakeFancyControl(button5, 10, Color.Maroon, Color.FromArgb(25, 156, 124));
-
+            GameUnits.MakeFancyControl(enter_game, 10, Color.WhiteSmoke, Color.White);
+            GameUnits.MakeFancyControl(button2, 1, Color.Black, Color.WhiteSmoke);
+            GameUnits.MakeFancyControl(volumnSettingsButton, 1, Color.Black, Color.WhiteSmoke);
+            GameUnits.MakeFancyControl(button4, 1, Color.Maroon, Color.FromArgb(25, 156, 124));
+            GameUnits.MakeFancyControl(button5, 10, Color.Maroon, Color.FromArgb(25, 156, 124));
         }
 
         //載入字體
-        private void LoadFontFromResource()
+        public void LoadFontFromResource()
         {
             try
             {
@@ -151,48 +150,6 @@ namespace math_combat
 
         }
 
-        public static void MakeRoundedControl(Control ctrl, int radius)
-        {
-            ctrl.Paint += (sender, e) =>
-            {
-                Control c = (Control)sender;
-                int r = radius;
-                e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-
-                GraphicsPath path = new GraphicsPath();
-                path.StartFigure();
-                path.AddArc(0, 0, 2 * r, 2 * r, 180, 90);
-                path.AddArc(c.Width - 2 * r, 0, 2 * r, 2 * r, 270, 90);
-                path.AddArc(c.Width - 2 * r, c.Height - 2 * r, 2 * r, 2 * r, 0, 90);
-                path.AddArc(0, c.Height - 2 * r, 2 * r, 2 * r, 90, 90);
-                path.CloseFigure();
-
-                c.Region = new Region(path);
-            };
-        }
-
-        // 圓角 + 滑鼠懸停變色
-        public static void MakeFancyControl(Control ctrl, int radius, Color normalColor, Color hoverColor)
-        {
-            // 先套用圓角效果
-            MakeRoundedControl(ctrl, radius);
-
-            // 設定預設字體顏色
-            ctrl.ForeColor = normalColor;
-
-            // 滑鼠滑入
-            ctrl.MouseEnter += (sender, e) =>
-            {
-                ctrl.ForeColor = hoverColor;
-            };
-
-            // 滑鼠離開
-            ctrl.MouseLeave += (sender, e) =>
-            {
-                ctrl.ForeColor = normalColor;
-            };
-        }
-
         private void input_room_number_Paint(object sender, PaintEventArgs e)
         {
 
@@ -262,7 +219,7 @@ namespace math_combat
 
         }
 
-        private void sfx_sub_Click(object sender, EventArgs e)
+        public void sfx_sub_Click(object sender, EventArgs e)
         {
             if (int.Parse(sfx_control.Text) <= 100 && int.Parse(sfx_control.Text) > 0)
             {

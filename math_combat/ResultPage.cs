@@ -12,9 +12,16 @@ namespace math_combat
 {
     public partial class ResultPage : Form
     {
-        public ResultPage()
+        HomePage homePage;
+        public ResultPage(HomePage homePage)
         {
             InitializeComponent();
+            this.homePage = homePage;
+        }
+
+        private void pictureBox3_Click(object sender, EventArgs e)
+        {
+            GameUnits.MakeRoundedControl(pictureBox3, 15);
         }
     }
 }

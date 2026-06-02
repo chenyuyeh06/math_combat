@@ -71,6 +71,26 @@ namespace math_combat.Properties {
         }
         
         /// <summary>
+        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
+        /// </summary>
+        internal static System.Drawing.Bitmap Crown1 {
+            get {
+                object obj = ResourceManager.GetObject("Crown1", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
+        /// </summary>
+        internal static System.Drawing.Bitmap Crown2 {
+            get {
+                object obj = ResourceManager.GetObject("Crown2", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   查詢類型 System.Byte[] 的當地語系化資源。
         /// </summary>
         internal static byte[] jf_openhuninn_2_1 {
@@ -96,6 +116,16 @@ namespace math_combat.Properties {
         internal static System.Drawing.Bitmap Plus_Math {
             get {
                 object obj = ResourceManager.GetObject("Plus Math", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
+        /// </summary>
+        internal static System.Drawing.Bitmap Prize1 {
+            get {
+                object obj = ResourceManager.GetObject("Prize1", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
