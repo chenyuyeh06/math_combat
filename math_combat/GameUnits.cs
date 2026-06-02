@@ -11,9 +11,15 @@ using System.Windows.Forms;
 
 namespace math_combat
 {
-    internal class GameUnits
+    public static class GameUnits
     {
-        private PrivateFontCollection privateFonts = new PrivateFontCollection();
+        public static HomePage homePage;
+        public static RoomPage roomPage;
+        public static GamePage gamePage;
+        public static ResultPage resultPage;
+
+
+
         public static void MakeRoundedControl(Control ctrl, int radius)
         {
             ctrl.Paint += (sender, e) =>
@@ -55,31 +61,34 @@ namespace math_combat
                 ctrl.ForeColor = normalColor;
             };
         }
-        
+
         //字體載入
-        public void LoadFontFromResource()
-        {
-            try
-            {
-                // 直接從資源檔撈出字體的 byte 陣列
-                byte[] fontData = Properties.Resources.jf_openhuninn_2_1;
 
-                // 在記憶體中配置空間並複製資料
-                IntPtr fontPtr = Marshal.AllocCoTaskMem(fontData.Length);
-                Marshal.Copy(fontData, 0, fontPtr, fontData.Length);
 
-                // 將記憶體中的字體資料註冊到私有字體庫中
-                privateFonts.AddMemoryFont(fontPtr, fontData.Length);
-
-                // 釋放記憶體指標
-                Marshal.FreeCoTaskMem(fontPtr);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("從資源載入字體失敗: " + ex.Message);
-            }
-        }
-    
         //視窗切換
+        public static void SwitchToForm(Form currentForm, Form targetForm)
+        {
+            if (currentForm == null || targetForm == null) return;
+
+            // 設定新視窗的位置與大小同步
+            targetForm.StartPosition = FormStartPosition.Manual;
+            targetForm.Location = currentForm.Location;
+            targetForm.Size = currentForm.Size;
+
+            // 讓新視窗記住原本的owner是誰
+            // 如果目前視窗本身就有owner就把owner傳承給新視窗
+            if (currentForm.Owner != null)
+            {
+                targetForm.Owner = currentForm.Owner;
+            }
+            else
+            {
+                // 如果目前視窗沒有owner那自己就是新視窗的owner
+                targetForm.Owner = currentForm;
+            }
+
+            targetForm.Show();
+            currentForm.Hide();
+        }
     }
 }

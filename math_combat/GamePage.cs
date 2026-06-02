@@ -17,11 +17,12 @@ namespace math_combat
         public GamePage(HomePage homePage)
         {
             InitializeComponent();
-            this.homePage = homePage;
+            this.homePage = GameUnits.homePage;
         }
 
         private void GamePage_Load(object sender, EventArgs e)
         {
+
         }
 
         private void panel1_Paint(object sender, PaintEventArgs e)

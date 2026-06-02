@@ -420,7 +420,6 @@
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(66, 49);
             this.button1.TabIndex = 0;
-            this.button1.Text = "X";
             this.button1.UseVisualStyleBackColor = false;
             this.button1.Click += new System.EventHandler(this.button1_Click_1);
             // 
@@ -487,10 +486,10 @@
             this.Controls.Add(this.input_room_number);
             this.Controls.Add(this.game_rule);
             this.Controls.Add(this.button4);
+            this.Controls.Add(this.button2);
             this.Controls.Add(this.volumnSettingsButton);
             this.Controls.Add(this.title);
             this.Controls.Add(this.pictureBox1);
-            this.Controls.Add(this.button2);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximumSize = new System.Drawing.Size(960, 540);
             this.MinimumSize = new System.Drawing.Size(960, 540);

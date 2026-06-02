@@ -13,19 +13,37 @@ namespace math_combat
     public partial class RoomPage : Form
     {
         private HomePage homePage;
+        private GamePage gamePage;
+
+        //variable for numbers
+        private int rounds = 3;
+        private int secs = 5;
         
         public RoomPage(HomePage homePage)
         {
             InitializeComponent();
-            this.homePage = homePage;
+            this.homePage = GameUnits.homePage;
+            this.gamePage = GameUnits.gamePage;
         }
 
         private void RoomPage_Load(object sender, EventArgs e)
         {
+            // 圓角
             GameUnits.MakeRoundedControl(pictureBox1, 15);
-            if (homePage != null)
-            {
-            }
+            GameUnits.MakeRoundedControl(start_game_button, 15);
+            GameUnits.MakeRoundedControl(game_set_bg, 15);
+            GameUnits.MakeRoundedControl(player1_bg, 15);
+            GameUnits.MakeRoundedControl(player2_bg, 15);
+            GameUnits.MakeRoundedControl(panel_guest_list, 15);
+
+            //hover color for fonts
+            GameUnits.MakeFancyControl(start_game_button, 15, Color.Black, Color.WhiteSmoke);
+            GameUnits.MakeFancyControl(round_sub, 15, Color.Black, Color.WhiteSmoke);
+            GameUnits.MakeFancyControl(round_plus, 15, Color.Black, Color.WhiteSmoke);
+            GameUnits.MakeFancyControl(sec_sub, 15, Color.Black, Color.WhiteSmoke);
+            GameUnits.MakeFancyControl(sec_plus, 15, Color.Black, Color.WhiteSmoke);
+
+
         }
 
         private void pictureBox2_Click(object sender, EventArgs e)
@@ -40,7 +58,7 @@ namespace math_combat
 
         private void start_game_button_Click(object sender, EventArgs e)
         {
-
+            GameUnits.SwitchToForm(this, gamePage);
         }
 
         private void round_plus_Click(object sender, EventArgs e)
@@ -57,6 +75,37 @@ namespace math_combat
             {
                 round_set.Text = "3";
             }
+        }
+
+        private void sec_plus_Click(object sender, EventArgs e)
+        {
+            if (int.Parse(sec_set.Text) < 10 && int.Parse(sec_set.Text) > 2){
+                secs = int.Parse(sec_set.Text) + 1;
+                sec_set.Text = secs.ToString();
+            }
+        }
+
+        private void sec_sub_Click(object sender, EventArgs e)
+        {
+            if (int.Parse(sec_set.Text) <= 10 && int.Parse(sec_set.Text) > 3) { 
+                secs = int.Parse(sec_set.Text) - 1;
+                sec_set.Text = secs.ToString();
+            }
+        }
+
+        private void back_to_home_page_Click(object sender, EventArgs e)
+        {
+            GameUnits.SwitchToForm(this, homePage);
+        }
+
+        private void RoomPage_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            GameUnits.SwitchToForm(this, homePage);
+        }
+
+        private void RoomPage_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            GameUnits.SwitchToForm(this, homePage);
         }
     }
 }

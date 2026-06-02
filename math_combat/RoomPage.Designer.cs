@@ -44,18 +44,24 @@
             this.sec_set = new System.Windows.Forms.Label();
             this.player2_name = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
-            this.guest_list = new System.Windows.Forms.PictureBox();
             this.game_set_bg = new System.Windows.Forms.PictureBox();
             this.player2_bg = new System.Windows.Forms.PictureBox();
             this.player1_bg = new System.Windows.Forms.PictureBox();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
-            ((System.ComponentModel.ISupportInitialize)(this.guest_list)).BeginInit();
+            this.panel_guest_list = new System.Windows.Forms.Panel();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.game_set_bg)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.player2_bg)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.player1_bg)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
+            this.panel_guest_list.SuspendLayout();
             this.SuspendLayout();
             // 
             // room_number
@@ -84,20 +90,24 @@
             // back_to_home_page
             // 
             this.back_to_home_page.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.back_to_home_page.FlatAppearance.BorderSize = 0;
             this.back_to_home_page.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.back_to_home_page.Font = new System.Drawing.Font("jf open 粉圓 2.1", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.back_to_home_page.Font = new System.Drawing.Font("jf open 粉圓 2.1", 15F);
             this.back_to_home_page.ForeColor = System.Drawing.Color.Maroon;
-            this.back_to_home_page.Location = new System.Drawing.Point(42, 31);
+            this.back_to_home_page.Location = new System.Drawing.Point(36, 31);
             this.back_to_home_page.Name = "back_to_home_page";
             this.back_to_home_page.Size = new System.Drawing.Size(102, 62);
             this.back_to_home_page.TabIndex = 9;
             this.back_to_home_page.Text = "< 首頁";
             this.back_to_home_page.UseVisualStyleBackColor = false;
+            this.back_to_home_page.Click += new System.EventHandler(this.back_to_home_page_Click);
             // 
             // start_game_button
             // 
             this.start_game_button.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(25)))), ((int)(((byte)(156)))), ((int)(((byte)(104)))));
             this.start_game_button.FlatAppearance.BorderSize = 0;
+            this.start_game_button.FlatAppearance.MouseDownBackColor = System.Drawing.Color.Maroon;
+            this.start_game_button.FlatAppearance.MouseOverBackColor = System.Drawing.Color.Teal;
             this.start_game_button.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.start_game_button.Font = new System.Drawing.Font("jf open 粉圓 2.1", 19.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.start_game_button.Location = new System.Drawing.Point(348, 156);
@@ -113,7 +123,7 @@
             this.player1_name.AutoSize = true;
             this.player1_name.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(109)))), ((int)(((byte)(109)))));
             this.player1_name.Font = new System.Drawing.Font("jf open 粉圓 2.1", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.player1_name.Location = new System.Drawing.Point(117, 200);
+            this.player1_name.Location = new System.Drawing.Point(117, 197);
             this.player1_name.Name = "player1_name";
             this.player1_name.Size = new System.Drawing.Size(110, 32);
             this.player1_name.TabIndex = 11;
@@ -146,10 +156,10 @@
             // 
             this.round_sub.AutoSize = true;
             this.round_sub.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(25)))), ((int)(((byte)(156)))), ((int)(((byte)(104)))));
-            this.round_sub.Font = new System.Drawing.Font("jf open 粉圓 2.1", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.round_sub.Location = new System.Drawing.Point(503, 325);
+            this.round_sub.Font = new System.Drawing.Font("jf open 粉圓 2.1", 16F);
+            this.round_sub.Location = new System.Drawing.Point(497, 318);
             this.round_sub.Name = "round_sub";
-            this.round_sub.Size = new System.Drawing.Size(21, 23);
+            this.round_sub.Size = new System.Drawing.Size(29, 31);
             this.round_sub.TabIndex = 15;
             this.round_sub.Text = "<";
             this.round_sub.Click += new System.EventHandler(this.round_sub_Click);
@@ -158,21 +168,22 @@
             // 
             this.sec_sub.AutoSize = true;
             this.sec_sub.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(25)))), ((int)(((byte)(156)))), ((int)(((byte)(104)))));
-            this.sec_sub.Font = new System.Drawing.Font("jf open 粉圓 2.1", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.sec_sub.Location = new System.Drawing.Point(503, 383);
+            this.sec_sub.Font = new System.Drawing.Font("jf open 粉圓 2.1", 16F);
+            this.sec_sub.Location = new System.Drawing.Point(497, 376);
             this.sec_sub.Name = "sec_sub";
-            this.sec_sub.Size = new System.Drawing.Size(21, 23);
+            this.sec_sub.Size = new System.Drawing.Size(29, 31);
             this.sec_sub.TabIndex = 16;
             this.sec_sub.Text = "<";
+            this.sec_sub.Click += new System.EventHandler(this.sec_sub_Click);
             // 
             // round_plus
             // 
             this.round_plus.AutoSize = true;
             this.round_plus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(25)))), ((int)(((byte)(156)))), ((int)(((byte)(104)))));
-            this.round_plus.Font = new System.Drawing.Font("jf open 粉圓 2.1", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.round_plus.Location = new System.Drawing.Point(564, 325);
+            this.round_plus.Font = new System.Drawing.Font("jf open 粉圓 2.1", 16F);
+            this.round_plus.Location = new System.Drawing.Point(558, 318);
             this.round_plus.Name = "round_plus";
-            this.round_plus.Size = new System.Drawing.Size(21, 23);
+            this.round_plus.Size = new System.Drawing.Size(29, 31);
             this.round_plus.TabIndex = 17;
             this.round_plus.Text = ">";
             this.round_plus.Click += new System.EventHandler(this.round_plus_Click);
@@ -181,12 +192,13 @@
             // 
             this.sec_plus.AutoSize = true;
             this.sec_plus.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(25)))), ((int)(((byte)(156)))), ((int)(((byte)(104)))));
-            this.sec_plus.Font = new System.Drawing.Font("jf open 粉圓 2.1", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.sec_plus.Location = new System.Drawing.Point(564, 383);
+            this.sec_plus.Font = new System.Drawing.Font("jf open 粉圓 2.1", 16F);
+            this.sec_plus.Location = new System.Drawing.Point(558, 376);
             this.sec_plus.Name = "sec_plus";
-            this.sec_plus.Size = new System.Drawing.Size(21, 23);
+            this.sec_plus.Size = new System.Drawing.Size(29, 31);
             this.sec_plus.TabIndex = 18;
             this.sec_plus.Text = ">";
+            this.sec_plus.Click += new System.EventHandler(this.sec_plus_Click);
             // 
             // round_set
             // 
@@ -215,7 +227,7 @@
             this.player2_name.AutoSize = true;
             this.player2_name.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(109)))), ((int)(((byte)(109)))));
             this.player2_name.Font = new System.Drawing.Font("jf open 粉圓 2.1", 16.2F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.player2_name.Location = new System.Drawing.Point(117, 374);
+            this.player2_name.Location = new System.Drawing.Point(117, 366);
             this.player2_name.Name = "player2_name";
             this.player2_name.Size = new System.Drawing.Size(110, 32);
             this.player2_name.TabIndex = 12;
@@ -226,19 +238,11 @@
             this.label1.AutoSize = true;
             this.label1.BackColor = System.Drawing.Color.WhiteSmoke;
             this.label1.Font = new System.Drawing.Font("jf open 粉圓 2.1", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.label1.Location = new System.Drawing.Point(805, 130);
+            this.label1.Location = new System.Drawing.Point(732, 127);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(90, 23);
             this.label1.TabIndex = 21;
             this.label1.Text = "觀戰名單";
-            // 
-            // guest_list
-            // 
-            this.guest_list.Location = new System.Drawing.Point(668, 156);
-            this.guest_list.Name = "guest_list";
-            this.guest_list.Size = new System.Drawing.Size(227, 283);
-            this.guest_list.TabIndex = 6;
-            this.guest_list.TabStop = false;
             // 
             // game_set_bg
             // 
@@ -280,11 +284,84 @@
             // 
             this.pictureBox2.BackColor = System.Drawing.Color.WhiteSmoke;
             this.pictureBox2.Image = global::math_combat.Properties.Resources.Crown2;
-            this.pictureBox2.Location = new System.Drawing.Point(142, 103);
+            this.pictureBox2.Location = new System.Drawing.Point(125, 85);
             this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(57, 50);
+            this.pictureBox2.Size = new System.Drawing.Size(74, 65);
             this.pictureBox2.TabIndex = 22;
             this.pictureBox2.TabStop = false;
+            // 
+            // panel_guest_list
+            // 
+            this.panel_guest_list.Controls.Add(this.label8);
+            this.panel_guest_list.Controls.Add(this.label7);
+            this.panel_guest_list.Controls.Add(this.label6);
+            this.panel_guest_list.Controls.Add(this.label5);
+            this.panel_guest_list.Controls.Add(this.label4);
+            this.panel_guest_list.Controls.Add(this.label3);
+            this.panel_guest_list.Location = new System.Drawing.Point(668, 156);
+            this.panel_guest_list.Name = "panel_guest_list";
+            this.panel_guest_list.Size = new System.Drawing.Size(227, 283);
+            this.panel_guest_list.TabIndex = 29;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("jf open 粉圓 2.1", 14F);
+            this.label3.Location = new System.Drawing.Point(26, 26);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(96, 28);
+            this.label3.TabIndex = 0;
+            this.label3.Text = "player3";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Font = new System.Drawing.Font("jf open 粉圓 2.1", 14F);
+            this.label4.Location = new System.Drawing.Point(26, 64);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(96, 28);
+            this.label4.TabIndex = 1;
+            this.label4.Text = "player4";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Font = new System.Drawing.Font("jf open 粉圓 2.1", 14F);
+            this.label5.Location = new System.Drawing.Point(26, 102);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(96, 28);
+            this.label5.TabIndex = 2;
+            this.label5.Text = "player5";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("jf open 粉圓 2.1", 14F);
+            this.label6.Location = new System.Drawing.Point(26, 140);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(96, 28);
+            this.label6.TabIndex = 3;
+            this.label6.Text = "player6";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Font = new System.Drawing.Font("jf open 粉圓 2.1", 14F);
+            this.label7.Location = new System.Drawing.Point(26, 178);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(96, 28);
+            this.label7.TabIndex = 4;
+            this.label7.Text = "player7";
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Font = new System.Drawing.Font("jf open 粉圓 2.1", 14F);
+            this.label8.Location = new System.Drawing.Point(26, 214);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(96, 28);
+            this.label8.TabIndex = 5;
+            this.label8.Text = "player8";
             // 
             // RoomPage
             // 
@@ -292,6 +369,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.Maroon;
             this.ClientSize = new System.Drawing.Size(942, 493);
+            this.Controls.Add(this.panel_guest_list);
             this.Controls.Add(this.pictureBox2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.sec_set);
@@ -307,7 +385,6 @@
             this.Controls.Add(this.start_game_button);
             this.Controls.Add(this.back_to_home_page);
             this.Controls.Add(this.label2);
-            this.Controls.Add(this.guest_list);
             this.Controls.Add(this.game_set_bg);
             this.Controls.Add(this.player2_bg);
             this.Controls.Add(this.player1_bg);
@@ -316,13 +393,16 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "RoomPage";
             this.Text = "RoomPage";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.RoomPage_FormClosing);
+            this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.RoomPage_FormClosed);
             this.Load += new System.EventHandler(this.RoomPage_Load);
-            ((System.ComponentModel.ISupportInitialize)(this.guest_list)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.game_set_bg)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.player2_bg)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.player1_bg)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
+            this.panel_guest_list.ResumeLayout(false);
+            this.panel_guest_list.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -333,7 +413,6 @@
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Label room_number;
         private System.Windows.Forms.PictureBox player1_bg;
-        private System.Windows.Forms.PictureBox guest_list;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button back_to_home_page;
         private System.Windows.Forms.Button start_game_button;
@@ -351,5 +430,12 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.PictureBox game_set_bg;
         private System.Windows.Forms.PictureBox pictureBox2;
+        private System.Windows.Forms.Panel panel_guest_list;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label3;
     }
 }
