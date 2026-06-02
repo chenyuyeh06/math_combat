@@ -16,5 +16,10 @@ namespace math_combat
         {
             InitializeComponent();
         }
+
+        private void RoomPage_Load(object sender, EventArgs e)
+        {
+
+        }
     }
 }

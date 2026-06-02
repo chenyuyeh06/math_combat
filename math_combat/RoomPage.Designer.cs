@@ -28,10 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(RoomPage));
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.room_number = new System.Windows.Forms.Label();
             this.player1_bg = new System.Windows.Forms.PictureBox();
-            this.game_set_bg = new System.Windows.Forms.PictureBox();
             this.guest_list = new System.Windows.Forms.PictureBox();
             this.room_owner = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
@@ -49,11 +49,12 @@
             this.sec_set = new System.Windows.Forms.Label();
             this.player2_name = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
+            this.game_set_bg = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.player1_bg)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.game_set_bg)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.guest_list)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.player2_bg)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.game_set_bg)).BeginInit();
             this.SuspendLayout();
             // 
             // pictureBox1
@@ -85,15 +86,6 @@
             this.player1_bg.Size = new System.Drawing.Size(236, 92);
             this.player1_bg.TabIndex = 2;
             this.player1_bg.TabStop = false;
-            // 
-            // game_set_bg
-            // 
-            this.game_set_bg.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(25)))), ((int)(((byte)(156)))), ((int)(((byte)(104)))));
-            this.game_set_bg.Location = new System.Drawing.Point(348, 277);
-            this.game_set_bg.Name = "game_set_bg";
-            this.game_set_bg.Size = new System.Drawing.Size(272, 162);
-            this.game_set_bg.TabIndex = 5;
-            this.game_set_bg.TabStop = false;
             // 
             // guest_list
             // 
@@ -281,6 +273,15 @@
             this.label1.TabIndex = 21;
             this.label1.Text = "觀戰名單";
             // 
+            // game_set_bg
+            // 
+            this.game_set_bg.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(25)))), ((int)(((byte)(156)))), ((int)(((byte)(104)))));
+            this.game_set_bg.Location = new System.Drawing.Point(348, 277);
+            this.game_set_bg.Name = "game_set_bg";
+            this.game_set_bg.Size = new System.Drawing.Size(272, 162);
+            this.game_set_bg.TabIndex = 5;
+            this.game_set_bg.TabStop = false;
+            // 
             // RoomPage
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 15F);
@@ -308,13 +309,15 @@
             this.Controls.Add(this.player1_bg);
             this.Controls.Add(this.room_number);
             this.Controls.Add(this.pictureBox1);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "RoomPage";
             this.Text = "RoomPage";
+            this.Load += new System.EventHandler(this.RoomPage_Load);
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.player1_bg)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.game_set_bg)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.guest_list)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.player2_bg)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.game_set_bg)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -325,7 +328,6 @@
         private System.Windows.Forms.PictureBox pictureBox1;
         private System.Windows.Forms.Label room_number;
         private System.Windows.Forms.PictureBox player1_bg;
-        private System.Windows.Forms.PictureBox game_set_bg;
         private System.Windows.Forms.PictureBox guest_list;
         private System.Windows.Forms.Label room_owner;
         private System.Windows.Forms.Label label2;
@@ -343,5 +345,6 @@
         private System.Windows.Forms.Label sec_set;
         private System.Windows.Forms.Label player2_name;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.PictureBox game_set_bg;
     }
 }

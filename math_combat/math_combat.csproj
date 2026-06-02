@@ -72,12 +72,6 @@
     <Compile Include="RoomPage.Designer.cs">
       <DependentUpon>RoomPage.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsPage.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsPage.Designer.cs">
-      <DependentUpon>SettingsPage.cs</DependentUpon>
-    </Compile>
     <EmbeddedResource Include="GamePage.resx">
       <DependentUpon>GamePage.cs</DependentUpon>
     </EmbeddedResource>
@@ -99,9 +93,6 @@
     </EmbeddedResource>
     <EmbeddedResource Include="RoomPage.resx">
       <DependentUpon>RoomPage.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsPage.resx">
-      <DependentUpon>SettingsPage.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
