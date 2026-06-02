@@ -13,10 +13,10 @@ namespace math_combat
 {
     public static class GameUnits
     {
-        public static HomePage homePage;
-        public static RoomPage roomPage;
-        public static GamePage gamePage;
-        public static ResultPage resultPage;
+        public static HomePage homePage = new HomePage();
+        public static RoomPage roomPage = new RoomPage(homePage);
+        public static GamePage gamePage = new GamePage(homePage);
+        public static ResultPage resultPage = new ResultPage(homePage);
 
 
 

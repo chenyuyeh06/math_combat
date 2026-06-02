@@ -14,10 +14,12 @@ namespace math_combat
     public partial class GamePage : Form
     {
         private HomePage homePage;
+        private RoomPage roomPage;
         public GamePage(HomePage homePage)
         {
             InitializeComponent();
             this.homePage = GameUnits.homePage;
+            this.roomPage = GameUnits.roomPage;
         }
 
         private void GamePage_Load(object sender, EventArgs e)
@@ -26,6 +28,16 @@ namespace math_combat
         }
 
         private void panel1_Paint(object sender, PaintEventArgs e)
+        {
+
+        }
+
+        private void check_card_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void cancel_card_Click(object sender, EventArgs e)
         {
 
         }
