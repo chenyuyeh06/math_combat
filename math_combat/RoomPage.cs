@@ -12,18 +12,17 @@ namespace math_combat
 {
     public partial class RoomPage : Form
     {
-        private HomePage homePage;
-        private GamePage gamePage;
+        private HomePage homePage => GameUnits.homePage;
+        private GamePage gamePage => GameUnits.gamePage;
+        private ResultPage resultPage => GameUnits.resultPage;
 
         //variable for numbers
         private int rounds = 3;
         private int secs = 5;
-        
+
         public RoomPage(HomePage homePage)
         {
             InitializeComponent();
-            this.homePage = GameUnits.homePage;
-            this.gamePage = GameUnits.gamePage;
         }
 
         private void RoomPage_Load(object sender, EventArgs e)
@@ -58,6 +57,8 @@ namespace math_combat
 
         private void start_game_button_Click(object sender, EventArgs e)
         {
+            // TODO: 傳送rounds和secs的數值到GamePage, 檢查進入遊戲的條件
+
             GameUnits.SwitchToForm(this, gamePage);
         }
 
@@ -79,7 +80,8 @@ namespace math_combat
 
         private void sec_plus_Click(object sender, EventArgs e)
         {
-            if (int.Parse(sec_set.Text) < 10 && int.Parse(sec_set.Text) > 2){
+            if (int.Parse(sec_set.Text) < 10 && int.Parse(sec_set.Text) > 2)
+            {
                 secs = int.Parse(sec_set.Text) + 1;
                 sec_set.Text = secs.ToString();
             }
@@ -87,7 +89,8 @@ namespace math_combat
 
         private void sec_sub_Click(object sender, EventArgs e)
         {
-            if (int.Parse(sec_set.Text) <= 10 && int.Parse(sec_set.Text) > 3) { 
+            if (int.Parse(sec_set.Text) <= 10 && int.Parse(sec_set.Text) > 3)
+            {
                 secs = int.Parse(sec_set.Text) - 1;
                 sec_set.Text = secs.ToString();
             }
@@ -105,7 +108,6 @@ namespace math_combat
 
         private void RoomPage_FormClosed(object sender, FormClosedEventArgs e)
         {
-            GameUnits.SwitchToForm(this, homePage);
         }
     }
 }

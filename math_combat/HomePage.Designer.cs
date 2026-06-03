@@ -38,6 +38,7 @@
             this.label6 = new System.Windows.Forms.Label();
             this.game_rule = new System.Windows.Forms.Panel();
             this.label8 = new System.Windows.Forms.Label();
+            this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.input_room_number = new System.Windows.Forms.Panel();
             this.label7 = new System.Windows.Forms.Label();
             this.textBox1 = new System.Windows.Forms.TextBox();
@@ -49,25 +50,24 @@
             this.textBox2 = new System.Windows.Forms.TextBox();
             this.volumn_settings = new System.Windows.Forms.Panel();
             this.sfx_control = new System.Windows.Forms.Label();
-            this.SFX = new System.Windows.Forms.Label();
-            this.bgm_control = new System.Windows.Forms.Label();
-            this.BGM = new System.Windows.Forms.Label();
             this.sfx_plus = new System.Windows.Forms.Button();
             this.sfx_sub = new System.Windows.Forms.Button();
+            this.SFX = new System.Windows.Forms.Label();
+            this.bgm_control = new System.Windows.Forms.Label();
             this.bgm_sub = new System.Windows.Forms.Button();
             this.bgm_plus = new System.Windows.Forms.Button();
+            this.BGM = new System.Windows.Forms.Label();
             this.button1 = new System.Windows.Forms.Button();
             this.pictureBox3 = new System.Windows.Forms.PictureBox();
-            this.pictureBox2 = new System.Windows.Forms.PictureBox();
             this.button4 = new System.Windows.Forms.Button();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.game_rule.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             this.input_room_number.SuspendLayout();
             this.panelMarquee.SuspendLayout();
             this.input_player_name.SuspendLayout();
             this.volumn_settings.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -189,6 +189,16 @@
             this.label8.TabIndex = 3;
             this.label8.Text = "總共有0、1、2、3、4、5、6、7\r\n、8、9，及加減乘除十四張卡牌，\r\n每一回合開始玩家會抽出其中五張\r\n卡牌，以這五張卡牌組合運算式，\r\n以運算式的結果來跟" +
     "對手對戰，結\r\n果比較大的一方獲勝。";
+            // 
+            // pictureBox2
+            // 
+            this.pictureBox2.BackColor = System.Drawing.Color.White;
+            this.pictureBox2.Location = new System.Drawing.Point(15, 15);
+            this.pictureBox2.Name = "pictureBox2";
+            this.pictureBox2.Size = new System.Drawing.Size(351, 315);
+            this.pictureBox2.TabIndex = 2;
+            this.pictureBox2.TabStop = false;
+            this.pictureBox2.Click += new System.EventHandler(this.pictureBox2_Click);
             // 
             // input_room_number
             // 
@@ -323,39 +333,6 @@
             this.sfx_control.TabIndex = 16;
             this.sfx_control.Text = "60";
             // 
-            // SFX
-            // 
-            this.SFX.AutoSize = true;
-            this.SFX.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.SFX.Font = new System.Drawing.Font("jf open 粉圓 2.1", 25F);
-            this.SFX.Location = new System.Drawing.Point(98, 163);
-            this.SFX.Name = "SFX";
-            this.SFX.Size = new System.Drawing.Size(188, 48);
-            this.SFX.TabIndex = 13;
-            this.SFX.Text = "遊戲音效";
-            // 
-            // bgm_control
-            // 
-            this.bgm_control.AutoSize = true;
-            this.bgm_control.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.bgm_control.Font = new System.Drawing.Font("jf open 粉圓 2.1", 19.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            this.bgm_control.Location = new System.Drawing.Point(150, 103);
-            this.bgm_control.Name = "bgm_control";
-            this.bgm_control.Size = new System.Drawing.Size(57, 38);
-            this.bgm_control.TabIndex = 12;
-            this.bgm_control.Text = "60";
-            // 
-            // BGM
-            // 
-            this.BGM.AutoSize = true;
-            this.BGM.BackColor = System.Drawing.Color.WhiteSmoke;
-            this.BGM.Font = new System.Drawing.Font("jf open 粉圓 2.1", 25F);
-            this.BGM.Location = new System.Drawing.Point(97, 41);
-            this.BGM.Name = "BGM";
-            this.BGM.Size = new System.Drawing.Size(188, 48);
-            this.BGM.TabIndex = 9;
-            this.BGM.Text = "背景音樂";
-            // 
             // sfx_plus
             // 
             this.sfx_plus.BackColor = System.Drawing.Color.WhiteSmoke;
@@ -383,6 +360,28 @@
             this.sfx_sub.UseVisualStyleBackColor = false;
             this.sfx_sub.Click += new System.EventHandler(this.sfx_sub_Click);
             // 
+            // SFX
+            // 
+            this.SFX.AutoSize = true;
+            this.SFX.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.SFX.Font = new System.Drawing.Font("jf open 粉圓 2.1", 25F);
+            this.SFX.Location = new System.Drawing.Point(98, 163);
+            this.SFX.Name = "SFX";
+            this.SFX.Size = new System.Drawing.Size(188, 48);
+            this.SFX.TabIndex = 13;
+            this.SFX.Text = "遊戲音效";
+            // 
+            // bgm_control
+            // 
+            this.bgm_control.AutoSize = true;
+            this.bgm_control.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.bgm_control.Font = new System.Drawing.Font("jf open 粉圓 2.1", 19.8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            this.bgm_control.Location = new System.Drawing.Point(150, 103);
+            this.bgm_control.Name = "bgm_control";
+            this.bgm_control.Size = new System.Drawing.Size(57, 38);
+            this.bgm_control.TabIndex = 12;
+            this.bgm_control.Text = "60";
+            // 
             // bgm_sub
             // 
             this.bgm_sub.BackColor = System.Drawing.Color.WhiteSmoke;
@@ -409,6 +408,17 @@
             this.bgm_plus.UseVisualStyleBackColor = false;
             this.bgm_plus.Click += new System.EventHandler(this.bgm_plus_Click);
             // 
+            // BGM
+            // 
+            this.BGM.AutoSize = true;
+            this.BGM.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.BGM.Font = new System.Drawing.Font("jf open 粉圓 2.1", 25F);
+            this.BGM.Location = new System.Drawing.Point(97, 41);
+            this.BGM.Name = "BGM";
+            this.BGM.Size = new System.Drawing.Size(188, 48);
+            this.BGM.TabIndex = 9;
+            this.BGM.Text = "背景音樂";
+            // 
             // button1
             // 
             this.button1.BackColor = System.Drawing.Color.WhiteSmoke;
@@ -431,16 +441,6 @@
             this.pictureBox3.Size = new System.Drawing.Size(351, 315);
             this.pictureBox3.TabIndex = 2;
             this.pictureBox3.TabStop = false;
-            // 
-            // pictureBox2
-            // 
-            this.pictureBox2.BackColor = System.Drawing.Color.White;
-            this.pictureBox2.Location = new System.Drawing.Point(15, 15);
-            this.pictureBox2.Name = "pictureBox2";
-            this.pictureBox2.Size = new System.Drawing.Size(351, 315);
-            this.pictureBox2.TabIndex = 2;
-            this.pictureBox2.TabStop = false;
-            this.pictureBox2.Click += new System.EventHandler(this.pictureBox2_Click);
             // 
             // button4
             // 
@@ -496,9 +496,11 @@
             this.Name = "HomePage";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "math_combat";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.HomePage_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.game_rule.ResumeLayout(false);
             this.game_rule.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
             this.input_room_number.ResumeLayout(false);
             this.input_room_number.PerformLayout();
             this.panelMarquee.ResumeLayout(false);
@@ -508,7 +510,6 @@
             this.volumn_settings.ResumeLayout(false);
             this.volumn_settings.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox3)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBox2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

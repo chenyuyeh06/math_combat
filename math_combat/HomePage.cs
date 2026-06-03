@@ -25,6 +25,9 @@ namespace math_combat
         private int volumn_sfx = 60;
         private int volume_bgm = 60;
 
+        private RoomPage roomPage => GameUnits.roomPage;
+        private GamePage gamePage => GameUnits.gamePage;
+        private ResultPage resultPage => GameUnits.resultPage;
 
         public HomePage()
         {
@@ -260,6 +263,20 @@ namespace math_combat
         private void button1_Click_1(object sender, EventArgs e)
         {
             volumn_settings.Visible = false;
+        }
+
+        private void HomePage_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // 如果是程式自己呼叫 Application.Exit() 就不攔截
+            if (e.CloseReason == CloseReason.ApplicationExitCall) return;
+
+            e.Cancel = true; // 先阻止關閉
+
+            DialogResult result = MessageBox.Show("確定要結束遊戲嗎？", "離開遊戲",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+
+            if (result == DialogResult.Yes)
+                Application.Exit();
         }
     }
 }

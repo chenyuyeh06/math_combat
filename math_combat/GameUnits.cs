@@ -13,11 +13,18 @@ namespace math_combat
 {
     public static class GameUnits
     {
-        public static HomePage homePage = new HomePage();
+        public static HomePage homePage { get; private set; }
+
+        public static void Initialize()
+        {
+            InitializeAllCards();       // 先初始化資料
+            homePage = new HomePage();  // 再建立 Form
+        }
+
+
         public static RoomPage roomPage = new RoomPage(homePage);
         public static GamePage gamePage = new GamePage(homePage);
         public static ResultPage resultPage = new ResultPage(homePage);
-
 
 
         public static void MakeRoundedControl(Control ctrl, int radius)
@@ -89,6 +96,88 @@ namespace math_combat
 
             targetForm.Show();
             currentForm.Hide();
+        }
+
+        // 1. 定義卡牌類型（全域可用）
+        public enum CardType { Number, Operator }
+
+        // 2. 定義卡牌資料結構（全域可用）
+        public class Card
+        {
+            public int Id { get; set; }
+            public CardType Type { get; set; }
+            public string Value { get; set; }
+            public Image CardImage { get; set; }
+        }
+
+        // 牌庫
+        public static List<Card> CardDatabase { get; private set; } = new List<Card>();
+
+
+        // 初始化這 14 張標準卡牌，在 HomePage 啟動時呼叫一次即可
+        public static void InitializeAllCards()
+        {
+            CardDatabase.Clear();
+
+            // 數字牌：card_0, card_1 ... card_9
+            for (int i = 0; i <= 9; i++)
+            {
+                CardDatabase.Add(new Card
+                {
+                    Id = i,
+                    Type = CardType.Number,
+                    Value = i.ToString(),
+                    CardImage = (Image)Properties.Resources.ResourceManager.GetObject($"card_{i}")
+                });
+            }
+
+            // 運算子牌：名稱對應你 Resource 裡的實際命名
+            var operators = new[]
+            {
+                (value: "+", name: "card_plus"),
+                (value: "-", name: "card_sub"),
+                (value: "*", name: "card_mul"),
+                (value: "/", name: "card_div"),
+            };
+            int id = 10;
+            foreach (var op in operators)
+            {
+                CardDatabase.Add(new Card
+                {
+                    Id = id++,
+                    Type = CardType.Operator,
+                    Value = op.value,
+                    CardImage = (Image)Properties.Resources.ResourceManager.GetObject(op.name)
+                });
+            }
+        }
+
+        // TODO: 從牌庫隨機抽取 5 張牌組成玩家手牌，確保不重複且符合規則（3 數字 + 2 運算子）
+        public static List<Card> CreateGameHand()
+        {
+            var random = new Random();
+            var hand = new List<Card>();
+
+            // 從數字牌（Id 0-9）隨機抽 3 張，不重複
+            var numberCards = CardDatabase
+                .Where(c => c.Type == CardType.Number)
+                .OrderBy(_ => random.Next())
+                .Take(3)
+                .ToList();
+
+            // 從運算子牌（+−×÷）隨機抽 2 張，不重複
+            var operatorCards = CardDatabase
+                .Where(c => c.Type == CardType.Operator)
+                .OrderBy(_ => random.Next())
+                .Take(2)
+                .ToList();
+
+            // 合併後再洗牌，讓手牌順序不固定
+            hand.AddRange(numberCards);
+            hand.AddRange(operatorCards);
+            hand = hand.OrderBy(_ => random.Next()).ToList();
+
+            return hand;
         }
     }
 }

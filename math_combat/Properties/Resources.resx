@@ -124,43 +124,43 @@
   <data name="Cancel" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Cancel.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="card0" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="card_0" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\card0.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="card1" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="card_1" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\card1.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="card2" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="card_2" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\card2.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="card3" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="card_3" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\card3.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="card4" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="card_4" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\card4.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="card5" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="card_5" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\card5.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="card6" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="card_6" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\card6.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="card7" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="card_7" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\card7.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="card8" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="card_8" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\card8.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="card9" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="card_9" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\card9.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="card_div" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\card_div.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="card_minus" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="card_sub" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\card_minus.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="card_mult" type="System.Resources.ResXFileRef, System.Windows.Forms">
+  <data name="card_mul" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\card_mult.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="card_plus" type="System.Resources.ResXFileRef, System.Windows.Forms">
@@ -190,5 +190,8 @@
   </data>
   <data name="Subtract" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\Subtract.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="card_background" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\card_background.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>
