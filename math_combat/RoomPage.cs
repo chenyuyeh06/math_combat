@@ -16,10 +16,6 @@ namespace math_combat
         private GamePage gamePage => GameUnits.gamePage;
         private ResultPage resultPage => GameUnits.resultPage;
 
-        //variable for numbers
-        private int rounds = 3;
-        private int secs = 5;
-
         public RoomPage(HomePage homePage)
         {
             InitializeComponent();
@@ -66,7 +62,8 @@ namespace math_combat
         {
             if (int.Parse(round_set.Text) < 5)
             {
-                round_set.Text = "5";
+                GameUnits.rounds = 5;
+                round_set.Text = GameUnits.rounds.ToString();
             }
         }
 
@@ -74,7 +71,8 @@ namespace math_combat
         {
             if (int.Parse(round_set.Text) > 3)
             {
-                round_set.Text = "3";
+                GameUnits.rounds = 3;
+                round_set.Text = GameUnits.rounds.ToString();
             }
         }
 
@@ -82,8 +80,8 @@ namespace math_combat
         {
             if (int.Parse(sec_set.Text) < 10 && int.Parse(sec_set.Text) > 2)
             {
-                secs = int.Parse(sec_set.Text) + 1;
-                sec_set.Text = secs.ToString();
+                GameUnits.secs = int.Parse(sec_set.Text) + 1;
+                sec_set.Text = GameUnits.secs.ToString();
             }
         }
 
@@ -91,8 +89,8 @@ namespace math_combat
         {
             if (int.Parse(sec_set.Text) <= 10 && int.Parse(sec_set.Text) > 3)
             {
-                secs = int.Parse(sec_set.Text) - 1;
-                sec_set.Text = secs.ToString();
+                GameUnits.secs = int.Parse(sec_set.Text) - 1;
+                sec_set.Text = GameUnits.secs.ToString();
             }
         }
 

@@ -17,14 +17,6 @@ namespace math_combat
     {
         private PrivateFontCollection privateFonts = new PrivateFontCollection();
 
-        // 玩家輸入
-        private string playerName;
-        private string roomNumber;
-
-        // 音效設定
-        private int volumn_sfx = 60;
-        private int volume_bgm = 60;
-
         private RoomPage roomPage => GameUnits.roomPage;
         private GamePage gamePage => GameUnits.gamePage;
         private ResultPage resultPage => GameUnits.resultPage;
@@ -198,7 +190,7 @@ namespace math_combat
             {
                 if (textBox1.Text.Length > 0)
                 {
-                    roomNumber = textBox1.Text;
+                    GameUnits.room_number = textBox1.Text;
                     input_room_number.Visible = false;
                 }
             }
@@ -210,7 +202,7 @@ namespace math_combat
             {
                 if (textBox2.Text.Length > 0)
                 {
-                    playerName = textBox2.Text;
+                    GameUnits.player_name = textBox2.Text;
                     input_room_number.Visible = true;
                     input_player_name.Visible = false;
                 }
@@ -227,7 +219,7 @@ namespace math_combat
             if (int.Parse(sfx_control.Text) <= 100 && int.Parse(sfx_control.Text) > 0)
             {
                 sfx_control.Text = (int.Parse(sfx_control.Text) - 1).ToString();
-                volumn_sfx = int.Parse(sfx_control.Text);
+                GameUnits.vulume_sfx = int.Parse(sfx_control.Text);
                 
             }
         }
@@ -237,7 +229,7 @@ namespace math_combat
             if (int.Parse(bgm_control.Text) <= 100 && int.Parse(bgm_control.Text) > 0)
             {
                 bgm_control.Text = (int.Parse(bgm_control.Text) - 1).ToString();
-                volume_bgm = int.Parse(bgm_control.Text);
+                GameUnits.volume_bgm = int.Parse(bgm_control.Text);
             }
         }
 
@@ -246,7 +238,7 @@ namespace math_combat
             if (int.Parse(bgm_control.Text) < 100 && int.Parse(bgm_control.Text) >= 0)
             {
                 bgm_control.Text = (int.Parse(bgm_control.Text) + 1).ToString();
-                volume_bgm = int.Parse(bgm_control.Text);
+                GameUnits.volume_bgm = int.Parse(bgm_control.Text);
 
             }
         }
@@ -256,7 +248,7 @@ namespace math_combat
             if (int.Parse(sfx_control.Text) < 100 && int.Parse(sfx_control.Text) >= 0)
             {
                 sfx_control.Text = (int.Parse(sfx_control.Text) + 1).ToString();
-                volumn_sfx = int.Parse(sfx_control.Text);
+                GameUnits.vulume_sfx = int.Parse(sfx_control.Text);
             }
         }
 

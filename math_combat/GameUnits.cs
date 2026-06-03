@@ -21,11 +21,21 @@ namespace math_combat
             homePage = new HomePage();  // 再建立 Form
         }
 
-
+        // 讓其他頁面可以直接存取彼此（不需要在建構子裡傳來傳去）
         public static RoomPage roomPage = new RoomPage(homePage);
         public static GamePage gamePage = new GamePage(homePage);
         public static ResultPage resultPage = new ResultPage(homePage);
 
+
+        // 玩家輸入
+        public static int vulume_sfx = 60;
+        public static int volume_bgm = 60;
+        public static string player_name;
+        public static string room_number;
+        
+        //遊戲控制
+        public static int rounds = 3;
+        public static int secs = 5;
 
         public static void MakeRoundedControl(Control ctrl, int radius)
         {

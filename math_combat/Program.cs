@@ -18,7 +18,7 @@ namespace math_combat
             Application.SetCompatibleTextRenderingDefault(false);
 
             GameUnits.Initialize();
-            Application.Run(new ResultPage(new HomePage()));
+            Application.Run(GameUnits.homePage);
         }
     }
 }
