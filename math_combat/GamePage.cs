@@ -16,23 +16,106 @@ namespace math_combat
         private RoomPage roomPage => GameUnits.roomPage;
         private PictureBox[] _boardSlots = new PictureBox[5];
 
+        private Timer gameTimer = new Timer();
+        private int currentRound = 1;
+        private int timeLeft = 0;
+        private bool roundSubmitted = false;
         public GamePage(HomePage homePage)
         {
             InitializeComponent();
             this.homePage = GameUnits.homePage;
             this.FormClosing += GamePage_FormClosing;
+
+            gameTimer.Interval = 1000; // 1 秒
+            gameTimer.Tick += GameTimer_Tick;
+
+            this.VisibleChanged += GamePage_VisibleChanged;
         }
 
         private void GamePage_Load(object sender, EventArgs e)
         {
-            DealCards();
             UpdateActionButtons();
            
         }
-        
 
+        private void GamePage_VisibleChanged(object sender, EventArgs e)
+        {
+            if (this.Visible)
+            {
+                StartGameSession();
+            }
+            else
+            {
+                gameTimer.Stop();
+            }
+        }
+
+        private void StartGameSession()
+        {
+            currentRound = 1;
+            StartRound();
+        }
+
+        private void StartRound()
+        {
+            roundSubmitted = false;
+            timeLeft = GameUnits.secs;
+
+            round.Text = $"回合：{currentRound}/{GameUnits.rounds}";
+            seconds.Text = $"時間：{timeLeft}s";
+
+            tableLayout_HandCards.Controls.Clear();
+            tableLayout_BoardCards.Controls.Clear();
+
+            DealCards();
+            UpdateActionButtons();
+
+            gameTimer.Start();
+        }
+
+        private void GameTimer_Tick(object sender, EventArgs e)
+        {
+            timeLeft--;
+            seconds.Text = $"時間：{timeLeft}s";
+
+            if (timeLeft <= 0)
+            {
+                gameTimer.Stop();
+                SubmitRoundResult(null);
+            }
+        }
+
+        private void SubmitRoundResult(string resultStr)
+        {
+            if (roundSubmitted) return;
+
+            roundSubmitted = true;
+            gameTimer.Stop();
+
+            if (resultStr == null)
+            {
+                MessageBox.Show("時間到，本回合沒有出牌。", "回合結束");
+            }
+            else
+            {
+                MessageBox.Show($"本回合結果：{resultStr}", "回合結束");
+            }
+
+            currentRound++;
+
+            if (currentRound > GameUnits.rounds)
+            {
+                GameUnits.SwitchToForm(this, GameUnits.resultPage);
+            }
+            else
+            {
+                StartRound();
+            }
+        }
         private void DealCards()
         {
+            tableLayout_HandCards.Controls.Clear();
+            tableLayout_BoardCards.Controls.Clear();
             // ── 手牌 ──
             var hand = GameUnits.CreateGameHand();
             for (int i = 0; i < hand.Count; i++)
@@ -151,7 +234,7 @@ namespace math_combat
             {
                 if (played[0].Type == GameUnits.CardType.Number)
                 {
-                    MessageBox.Show($"結果：{played[0].Value}", "出牌結果");
+                    SubmitRoundResult(played[0].Value);
                     return;
                 }
                 else
@@ -205,7 +288,8 @@ namespace math_combat
                     ? ((int)result).ToString()
                     : result.ToString("0.##");
 
-                MessageBox.Show($"{expression} = {resultStr}", "出牌結果");
+                SubmitRoundResult(resultStr);
+                return;
             }
             catch
             {
