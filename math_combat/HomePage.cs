@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -86,6 +86,7 @@ namespace math_combat
             input_player_name.Visible = true;
             input_room_number.Visible = false;
             input_player_name.BringToFront();
+            textBox2.Focus();
         }
 
         private void button2_Click(object sender, EventArgs e)
@@ -184,14 +185,25 @@ namespace math_combat
 
         }
 
-        private void textBox1_KeyPress(object sender, KeyPressEventArgs e)
+        private async void textBox1_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (e.KeyChar == (char)Keys.Enter)
             {
                 if (textBox1.Text.Length > 0)
                 {
-                    GameUnits.room_number = textBox1.Text;
-                    input_room_number.Visible = false;
+                    if (int.TryParse(textBox1.Text, out int portVal) && portVal > 0 && portVal <= 65535)
+                    {
+                        textBox1.Enabled = false;
+                        GameUnits.room_number = textBox1.Text;
+                        bool success = await GameUnits.StartNetwork(portVal);
+                        textBox1.Enabled = true;
+                        
+                        if (success)
+                        {
+                            input_room_number.Visible = false;
+                            GameUnits.SwitchToForm(this, roomPage);
+                        }
+                    }
                 }
             }
         }
@@ -205,6 +217,8 @@ namespace math_combat
                     GameUnits.player_name = textBox2.Text;
                     input_room_number.Visible = true;
                     input_player_name.Visible = false;
+                    input_room_number.BringToFront();
+                    textBox1.Focus();
                 }
             }
         }

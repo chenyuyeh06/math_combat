@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -20,6 +20,7 @@ namespace math_combat
         {
             InitializeComponent();
             this.homePage = GameUnits.homePage;
+            this.FormClosing += GamePage_FormClosing;
         }
 
         private void GamePage_Load(object sender, EventArgs e)
@@ -210,6 +211,24 @@ namespace math_combat
             {
                 MessageBox.Show($"無法計算算式：{expression}", "計算錯誤", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
+
+            // 檢查在該回合結束後是否有人斷線
+            if (GameUnits.opponentDisconnected)
+            {
+                MessageBox.Show("對手已中斷連線，對戰結束。", "對戰結束", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                GameUnits.opponentDisconnected = false; // 重置
+                
+                if (GameUnits.isHost)
+                {
+                    GameUnits.Broadcast("EXIT_GAME");
+                    GameUnits.SwitchToForm(this, GameUnits.roomPage);
+                }
+                else
+                {
+                    GameUnits.SwitchToForm(this, GameUnits.roomPage);
+                    GameUnits.PerformLobbyHandoff();
+                }
+            }
         }
 
         // ── 取消出牌，全部退回手牌 ──
@@ -236,12 +255,26 @@ namespace math_combat
         private void BoardCard_Click(object sender, MouseEventArgs e) { }
         private void pictureBox10_Click(object sender, EventArgs e) { }
 
-        private void GamePage_FormClosed(object sender, FormClosedEventArgs e)
+        private void GamePage_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (!this.Visible) return;
+            if (e.CloseReason == CloseReason.ApplicationExitCall) return;
+
             DialogResult result = MessageBox.Show("確定要離開對戰嗎？", "離開對戰",
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (result == DialogResult.Yes)
-                GameUnits.SwitchToForm(this, roomPage);
+            {
+                GameUnits.CleanupNetwork();
+                GameUnits.SwitchToForm(this, homePage);
+            }
+            else
+            {
+                e.Cancel = true;
+            }
+        }
+
+        private void GamePage_FormClosed(object sender, FormClosedEventArgs e)
+        {
         }
     }
 }

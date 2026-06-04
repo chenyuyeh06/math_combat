@@ -1,4 +1,4 @@
-﻿namespace math_combat
+namespace math_combat
 {
     partial class HomePage
     {
@@ -252,7 +252,7 @@
             this.labelMarquee.Name = "labelMarquee";
             this.labelMarquee.Size = new System.Drawing.Size(756, 28);
             this.labelMarquee.TabIndex = 6;
-            this.labelMarquee.Text = "網路程式設計期末作業，製作名單：葉辰宇、林湘庭、徐巧芸、夏允謙";
+            this.labelMarquee.Text = "網路程式設計期末作業，製作名單：葉宸宇、林湘庭、徐巧芸、夏允謙";
             this.labelMarquee.Click += new System.EventHandler(this.label1_Click);
             // 
             // panelMarquee
