@@ -1,0 +1,14 @@
+C:\Users\woofv\OneDrive\文件\網路程式設計\B11115002_徐巧芸_HW1\math_combat_server0\math_combat_server0\bin\Debug\math_combat_server0.exe.config
+C:\Users\woofv\OneDrive\文件\網路程式設計\B11115002_徐巧芸_HW1\math_combat_server0\math_combat_server0\bin\Debug\math_combat_server0.exe
+C:\Users\woofv\OneDrive\文件\網路程式設計\B11115002_徐巧芸_HW1\math_combat_server0\math_combat_server0\bin\Debug\math_combat_server0.pdb
+C:\Users\woofv\OneDrive\文件\網路程式設計\B11115002_徐巧芸_HW1\math_combat_server0\math_combat_server0\obj\Debug\math_combat_server0.csproj.AssemblyReference.cache
+C:\Users\woofv\OneDrive\文件\網路程式設計\B11115002_徐巧芸_HW1\math_combat_server0\math_combat_server0\obj\Debug\math_combat_server0.Properties.Resources.resources
+C:\Users\woofv\OneDrive\文件\網路程式設計\B11115002_徐巧芸_HW1\math_combat_server0\math_combat_server0\obj\Debug\math_combat_server0.csproj.GenerateResource.cache
+C:\Users\woofv\OneDrive\文件\網路程式設計\B11115002_徐巧芸_HW1\math_combat_server0\math_combat_server0\obj\Debug\math_combat_server0.csproj.CoreCompileInputs.cache
+C:\Users\woofv\OneDrive\文件\網路程式設計\B11115002_徐巧芸_HW1\math_combat_server0\math_combat_server0\obj\Debug\math_combat_server0.exe
+C:\Users\woofv\OneDrive\文件\網路程式設計\B11115002_徐巧芸_HW1\math_combat_server0\math_combat_server0\obj\Debug\math_combat_server0.pdb
+C:\Users\woofv\OneDrive\文件\網路程式設計\B11115002_徐巧芸_HW1\math_combat_server0\math_combat_server0\obj\Debug\math_combat_server0.exe.config
+C:\Users\woofv\OneDrive\文件\網路程式設計\B11115002_徐巧芸_HW1\math_combat_server0\math_combat_server0\obj\Debug\math_combat_server.Form1.resources
+C:\Users\woofv\OneDrive\文件\網路程式設計\B11115002_徐巧芸_HW1\math_combat_server0\math_combat_server0\bin\Debug\Newtonsoft.Json.dll
+C:\Users\woofv\OneDrive\文件\網路程式設計\B11115002_徐巧芸_HW1\math_combat_server0\math_combat_server0\bin\Debug\Newtonsoft.Json.xml
+C:\Users\woofv\OneDrive\文件\網路程式設計\B11115002_徐巧芸_HW1\math_combat_server0\math_combat_server0\obj\Debug\math_com.D2AEDA1C.Up2Date
