@@ -3,69 +3,586 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Drawing.Text;
+using System.IO;
 using System.Linq;
-using System.Net;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web.Script.Serialization;
 using System.Windows.Forms;
 
 namespace math_combat
 {
     public static class GameUnits
     {
-        public static HomePage homePage { get; private set; }
+        // ── Pages ──────────────────────────────────────────────────────────────
+        public static HomePage   homePage   { get; private set; }
+        public static RoomPage   roomPage   = null;   // 在 Initialize() 後建立
+        public static GamePage   gamePage   = null;
+        public static ResultPage resultPage = null;
 
         public static void Initialize()
         {
-            InitializeAllCards();       // 先初始化資料
-            homePage = new HomePage();  // 再建立 Form
+            InitializeAllCards();
+            homePage   = new HomePage();
+            roomPage   = new RoomPage(homePage);
+            gamePage   = new GamePage(homePage);
+            resultPage = new ResultPage(homePage);
         }
 
-        // 讓其他頁面可以直接存取彼此（不需要在建構子裡傳來傳去）
-        public static RoomPage roomPage = new RoomPage(homePage);
-        public static GamePage gamePage = new GamePage(homePage);
-        public static ResultPage resultPage = new ResultPage(homePage);
+        // ── JSON 序列化工具 ────────────────────────────────────────────────────
+        private static readonly JavaScriptSerializer _json = new JavaScriptSerializer();
 
-
-        // 玩家輸入
-        public static int vulume_sfx = 60;
-        public static int volume_bgm = 60;
+        // ── 玩家輸入 ───────────────────────────────────────────────────────────
+        public static int    vulume_sfx  = 60;
+        public static int    volume_bgm  = 60;
         public static string player_name;
-        public static string room_number;
-        
-        // 網路通訊變數
-        public static int port;
-        public static bool isHost;
-        public static TcpListener listener;
-        
-        // Host 端管理連線
-        public static List<TcpClient> clientList = new List<TcpClient>();
-        public static List<string> clientNames = new List<string>();
-        
-        // Client 端連線
-        public static TcpClient client;
-        public static NetworkStream stream;
-        
-        // 暫存資料與狀態
-        public static string hostName = "";
-        public static string player2Name = "";
+        public static string room_number;   // 房間號碼（字串，即 roomId）
+
+        // ── Server 連線 ────────────────────────────────────────────────────────
+        private const  string SERVER_IP   = "127.0.0.1";
+        private const  int    SERVER_PORT = 9000;
+
+        private static TcpClient    _tcp;
+        private static NetworkStream _netStream;
+        private static StreamReader  _reader;
+        private static StreamWriter  _writer;
+        public  static bool isConnected = false;
+
+        // ── 身分 ───────────────────────────────────────────────────────────────
+        /// <summary>true = 建立房間的 Player1（房主）</summary>
+        public static bool isHost      = false;
+        /// <summary>true = 觀戰者</summary>
         public static bool isSpectator = false;
-        public static bool isConnected = false;
-        
-        // 準備狀態
-        public static bool hostReady = false;
-        public static bool clientReady = false;
-        
-        // 斷線延遲處理與遞補變數
-        public static bool opponentDisconnected = false;
-        public static bool needHandoff = false;
-        public static List<string> lastRoomInfoNames = new List<string>();
-        
-        //遊戲控制
+
+        // ── 房間狀態 ───────────────────────────────────────────────────────────
+        public static string       hostName       = "";
+        public static string       player2Name    = "";
+        public static bool         hostReady      = false;  // Player1 是否已送 START_GAME
+        public static bool         clientReady    = false;  // Player2 是否已送 READY
+        public static List<string> spectatorNames = new List<string>();
+
+        // ── 遊戲設定 ───────────────────────────────────────────────────────────
         public static int rounds = 3;
-        public static int secs = 5;
+        public static int secs   = 30;
+
+        // ── 遊戲進行狀態 ───────────────────────────────────────────────────────
+        public static int    currentRound = 0;
+        public static int    wins1        = 0;
+        public static int    wins2        = 0;
+        public static bool   opponentDisconnected = false;
+
+        // ── 本回合牌組（Server 下發） ──────────────────────────────────────────
+        public static List<string> currentCards = new List<string>();
+
+        // ══════════════════════════════════════════════════════════════════════
+        //  連線 / 斷線
+        // ══════════════════════════════════════════════════════════════════════
+
+        /// <summary>
+        /// 連到中央 Server（127.0.0.1:9000），然後送 CREATE_ROOM 或 JOIN_ROOM。
+        /// roomId = 使用者輸入的房間號碼（數字字串）。
+        /// 回傳 true 表示 TCP 連線成功（不代表房間操作成功，結果透過回呼通知 UI）。
+        /// </summary>
+        public static async Task<bool> StartNetwork(string roomId, bool create)
+        {
+            room_number = roomId;
+            try
+            {
+                _tcp = new TcpClient();
+                var connectTask = _tcp.ConnectAsync(SERVER_IP, SERVER_PORT);
+
+                if (await Task.WhenAny(connectTask, Task.Delay(3000)) != connectTask)
+                    throw new TimeoutException("無法連到 Server（逾時）");
+
+                await connectTask; // 拋出連線失敗的例外
+
+                _netStream = _tcp.GetStream();
+                _reader    = new StreamReader(_netStream, Encoding.UTF8);
+                _writer    = new StreamWriter(_netStream, Encoding.UTF8) { AutoFlush = true };
+                isConnected = true;
+
+                // 啟動背景接收迴圈
+                _ = Task.Run(() => ReceiveLoop());
+
+                // 送出建立 / 加入訊息
+                if (create)
+                {
+                    isHost = true;
+                    SendJson(new CreateRoomMsg
+                    {
+                        name    = player_name,
+                        roomId  = roomId,
+                        rounds  = rounds,
+                        seconds = secs
+                    });
+                }
+                else
+                {
+                    isHost = false;
+                    SendJson(new JoinRoomMsg
+                    {
+                        name   = player_name,
+                        roomId = roomId
+                    });
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                CleanupNetwork();
+                ShowError("連線失敗：" + ex.Message);
+                return false;
+            }
+        }
+
+        /// <summary>送出任意可序列化物件（加換行）</summary>
+        public static void SendJson(object msg)
+        {
+            if (_writer == null) return;
+            try
+            {
+                string json = _json.Serialize(msg);
+                _writer.WriteLine(json);
+            }
+            catch { }
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        //  接收迴圈
+        // ══════════════════════════════════════════════════════════════════════
+
+        private static async Task ReceiveLoop()
+        {
+            try
+            {
+                while (isConnected && _reader != null)
+                {
+                    string line = await _reader.ReadLineAsync();
+                    if (line == null) break; // Server 斷線
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+                    ProcessMessage(line);
+                }
+            }
+            catch { }
+            finally
+            {
+                HandleDisconnect();
+            }
+        }
+
+        private static void ProcessMessage(string json)
+        {
+            try
+            {
+                // 先只解 type 欄位，再根據 type 完整反序列化
+                var baseMsg = _json.Deserialize<NetworkMessage>(json);
+                if (baseMsg == null || string.IsNullOrEmpty(baseMsg.type)) return;
+
+                switch (baseMsg.type)
+                {
+                    // ── 房間建立 / 加入 ──────────────────────────────────────
+                    case "ROOM_CREATED":
+                    {
+                        var m = _json.Deserialize<RoomCreatedMsg>(json);
+                        room_number = m.roomId;
+                        // 切換到 RoomPage
+                        roomPage?.BeginInvoke(new Action(() =>
+                            SwitchToForm(homePage, roomPage)));
+                        break;
+                    }
+
+                    case "ROOM_JOINED":
+                    {
+                        var m = _json.Deserialize<RoomJoinedMsg>(json);
+                        isSpectator = (m.role == "spectator");
+
+                        if (m.role == "player")
+                        {
+                            // 對手名稱 = opponent
+                            if (isHost)
+                            {
+                                player2Name = m.opponent ?? "";
+                            }
+                            else
+                            {
+                                hostName    = m.opponent ?? "";
+                                player2Name = player_name;
+                            }
+                            rounds = m.rounds;
+                            secs   = m.seconds;
+                        }
+                        else // spectator
+                        {
+                            hostName    = m.player1 ?? "";
+                            player2Name = m.player2 ?? "";
+                            currentRound = m.currentRound;
+                            wins1        = m.wins1;
+                            wins2        = m.wins2;
+                        }
+
+                        // 切換到 RoomPage
+                        roomPage?.BeginInvoke(new Action(() =>
+                            SwitchToForm(homePage, roomPage)));
+                        break;
+                    }
+
+                    // ── 房間資訊更新 ─────────────────────────────────────────
+                    case "ROOM_INFO":
+                    {
+                        var m = _json.Deserialize<RoomInfoMsg>(json);
+                        hostName       = m.player1 ?? "";
+                        player2Name    = m.player2 ?? "";
+                        spectatorNames = m.spectators ?? new List<string>();
+                        UpdateRoomUI();
+                        break;
+                    }
+
+                    case "ROOM_UPDATED":
+                    {
+                        var m = _json.Deserialize<RoomUpdatedMsg>(json);
+                        rounds = m.rounds;
+                        secs   = m.seconds;
+                        UpdateRoomUI();
+                        break;
+                    }
+
+                    // ── 準備狀態 ─────────────────────────────────────────────
+                    case "READY_STATE":
+                    {
+                        var m = _json.Deserialize<ReadyStateMsg>(json);
+                        hostReady   = m.player1Ready;
+                        clientReady = m.player2Ready;
+                        UpdateRoomUI();
+                        break;
+                    }
+
+                    // ── 遊戲開始 ─────────────────────────────────────────────
+                    case "GAME_START":
+                    {
+                        var m = _json.Deserialize<GameStartMsg>(json);
+                        rounds = m.rounds;
+                        secs   = m.seconds;
+                        wins1  = 0;
+                        wins2  = 0;
+                        roomPage?.BeginInvoke(new Action(() =>
+                            SwitchToForm(roomPage, gamePage)));
+                        break;
+                    }
+
+                    // ── 回合開始（Server 下發牌組）──────────────────────────
+                    case "ROUND_START":
+                    {
+                        var m = _json.Deserialize<RoundStartMsg>(json);
+                        currentRound = m.round;
+                        currentCards = m.cards ?? new List<string>();
+                        gamePage?.BeginInvoke(new Action(() =>
+                            gamePage.OnRoundStart(m.round, m.seconds, m.cards)));
+                        break;
+                    }
+
+                    // ── 回合結算 ─────────────────────────────────────────────
+                    case "ROUND_RESULT":
+                    {
+                        var m = _json.Deserialize<RoundResultMsg>(json);
+                        wins1 = m.wins1;
+                        wins2 = m.wins2;
+                        gamePage?.BeginInvoke(new Action(() =>
+                            gamePage.OnRoundResult(m)));
+                        break;
+                    }
+
+                    // ── 進入下一回合 ─────────────────────────────────────────
+                    case "NEXT_ROUND":
+                    {
+                        // ROUND_START 會緊接著來，不需額外動作
+                        break;
+                    }
+
+                    // ── 遊戲結束 ─────────────────────────────────────────────
+                    case "GAME_OVER":
+                    {
+                        var m = _json.Deserialize<GameOverMsg>(json);
+                        wins1 = m.wins1;
+                        wins2 = m.wins2;
+                        gamePage?.BeginInvoke(new Action(() =>
+                            gamePage.OnGameOver(m)));
+                        break;
+                    }
+
+                    // ── 回到大廳後的房間重置 ─────────────────────────────────
+                    case "ROOM_RESET":
+                    {
+                        var m = _json.Deserialize<RoomResetMsg>(json);
+                        hostName       = m.player1 ?? "";
+                        player2Name    = m.player2 ?? "";
+                        spectatorNames = m.spectators ?? new List<string>();
+                        rounds         = m.rounds;
+                        secs           = m.seconds;
+                        hostReady      = false;
+                        clientReady    = false;
+                        UpdateRoomUI();
+                        break;
+                    }
+
+                    // ── 玩家離開 ─────────────────────────────────────────────
+                    case "PLAYER_LEFT":
+                    {
+                        var m = _json.Deserialize<PlayerLeftMsg>(json);
+                        if (gamePage != null && gamePage.Visible)
+                        {
+                            opponentDisconnected = true;
+                        }
+                        else
+                        {
+                            ShowInfo($"玩家「{m.name}」已離開房間。");
+                            UpdateRoomUI();
+                        }
+                        break;
+                    }
+
+                    // ── 觀戰者人數更新 ───────────────────────────────────────
+                    case "SPECTATOR_JOINED":
+                    {
+                        var m = _json.Deserialize<SpectatorJoinedMsg>(json);
+                        if (!spectatorNames.Contains(m.name))
+                            spectatorNames.Add(m.name);
+                        UpdateRoomUI();
+                        break;
+                    }
+
+                    case "SPECTATOR_LEFT":
+                    {
+                        var m = _json.Deserialize<SpectatorLeftMsg>(json);
+                        spectatorNames.Remove(m.name);
+                        UpdateRoomUI();
+                        break;
+                    }
+
+                    // ── 遊戲中止 ─────────────────────────────────────────────
+                    case "GAME_ABORTED":
+                    {
+                        var m = _json.Deserialize<GameAbortedMsg>(json);
+                        Form activeForm = gamePage?.Visible == true ? (Form)gamePage : roomPage;
+                        activeForm?.BeginInvoke(new Action(() =>
+                        {
+                            MessageBox.Show(m.message ?? "對戰已中止。", "對戰中止",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            SwitchToForm(activeForm, roomPage);
+                        }));
+                        break;
+                    }
+
+                    // ── 錯誤 ─────────────────────────────────────────────────
+                    case "ERROR":
+                    {
+                        var m = _json.Deserialize<ErrorMsg>(json);
+                        HandleServerError(m);
+                        break;
+                    }
+                }
+            }
+            catch { /* 忽略格式不良的訊息 */ }
+        }
+
+        private static void HandleServerError(ErrorMsg m)
+        {
+            string text = m.message ?? m.code;
+
+            switch (m.code)
+            {
+                case "ROOM_NOT_FOUND":
+                    // 找不到房間 → 詢問是否要建立
+                    homePage?.BeginInvoke(new Action(async () =>
+                    {
+                        var dlg = MessageBox.Show(
+                            $"找不到房間「{room_number}」。\n要建立這個房間嗎？",
+                            "房間不存在",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Question);
+
+                        if (dlg == DialogResult.Yes)
+                        {
+                            // 重新連線，這次送 CREATE_ROOM
+                            CleanupNetwork();
+                            await StartNetwork(room_number, create: true);
+                        }
+                        else
+                        {
+                            CleanupNetwork();
+                        }
+                    }));
+                    break;
+
+                case "ROOM_ID_IN_USE":
+                case "NAME_IN_USE":
+                case "ROOM_FULL":
+                    homePage?.BeginInvoke(new Action(() =>
+                    {
+                        MessageBox.Show(text, "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        if (roomPage?.Visible == true)
+                            SwitchToForm(roomPage, homePage);
+                    }));
+                    CleanupNetwork();
+                    break;
+
+                default:
+                    ShowError(text);
+                    break;
+            }
+        }
+
+        private static void HandleDisconnect()
+        {
+            if (!isConnected) return;
+            isConnected = false;
+
+            if (gamePage?.Visible == true)
+            {
+                opponentDisconnected = true;
+            }
+            else
+            {
+                ShowInfo("與 Server 的連線已中斷。");
+                roomPage?.BeginInvoke(new Action(() =>
+                    SwitchToForm(roomPage, homePage)));
+            }
+            CleanupNetwork();
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        //  公開動作 API（由 UI 呼叫）
+        // ══════════════════════════════════════════════════════════════════════
+
+        /// <summary>房主送出 START_GAME</summary>
+        public static void SendStartGame()
+        {
+            if (!isHost || !isConnected) return;
+            SendJson(new StartGameMsg());
+        }
+
+        /// <summary>Player2 切換準備狀態，並通知 Server</summary>
+        public static void ToggleClientReady()
+        {
+            if (isSpectator || !isConnected) return;
+            clientReady = !clientReady;
+            SendJson(clientReady ? (object)new ReadyMsg() : new UnreadyMsg());
+        }
+
+        /// <summary>送出本回合得分給 Server</summary>
+        public static void SendScore(int round, double score)
+        {
+            if (!isConnected) return;
+            SendJson(new SubmitScoreMsg { round = round, score = score });
+        }
+
+        /// <summary>遊戲結束後回到大廳</summary>
+        public static void SendReturnRoom()
+        {
+            SendJson(new ReturnRoomMsg());
+        }
+
+        /// <summary>遊戲結束後直接離開</summary>
+        public static void SendLeaveAfterGame()
+        {
+            SendJson(new LeaveAfterGameMsg());
+        }
+
+        /// <summary>更新房間設定（只有 Player1 可送）</summary>
+        public static void SendUpdateRoom()
+        {
+            if (!isHost || !isConnected) return;
+            SendJson(new UpdateRoomMsg { rounds = rounds, seconds = secs });
+        }
+
+        /// <summary>通知 Server 離開，然後清理本機連線</summary>
+        public static void SendLeaveAndCleanup()
+        {
+            try { SendJson(new LeaveMsg()); } catch { }
+            CleanupNetwork();
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        //  清理
+        // ══════════════════════════════════════════════════════════════════════
+
+        public static void CleanupNetwork()
+        {
+            isConnected          = false;
+            isHost               = false;
+            isSpectator          = false;
+            hostReady            = false;
+            clientReady          = false;
+            opponentDisconnected = false;
+            hostName             = "";
+            player2Name          = "";
+            spectatorNames.Clear();
+            currentCards.Clear();
+            wins1        = 0;
+            wins2        = 0;
+            currentRound = 0;
+
+            try { _writer?.Close(); }    catch { }
+            try { _reader?.Close(); }    catch { }
+            try { _netStream?.Close(); } catch { }
+            try { _tcp?.Close(); }       catch { }
+
+            _writer    = null;
+            _reader    = null;
+            _netStream = null;
+            _tcp       = null;
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        //  UI 輔助
+        // ══════════════════════════════════════════════════════════════════════
+
+        private static void UpdateRoomUI()
+        {
+            roomPage?.BeginInvoke(new Action(() => roomPage.RefreshRoomInfo()));
+        }
+
+        private static void ShowError(string msg)
+        {
+            Form target = (Form)(gamePage?.Visible == true ? gamePage :
+                                 roomPage?.Visible == true ? (Form)roomPage : homePage);
+            target?.BeginInvoke(new Action(() =>
+                MessageBox.Show(msg, "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error)));
+        }
+
+        private static void ShowInfo(string msg)
+        {
+            Form target = (Form)(gamePage?.Visible == true ? gamePage :
+                                 roomPage?.Visible == true ? (Form)roomPage : homePage);
+            target?.BeginInvoke(new Action(() =>
+                MessageBox.Show(msg, "通知", MessageBoxButtons.OK, MessageBoxIcon.Information)));
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        //  視窗切換
+        // ══════════════════════════════════════════════════════════════════════
+
+        public static void SwitchToForm(Form currentForm, Form targetForm)
+        {
+            if (currentForm == null || targetForm == null) return;
+            targetForm.StartPosition = FormStartPosition.Manual;
+            targetForm.Location      = currentForm.Location;
+            targetForm.Size          = currentForm.Size;
+
+            if (currentForm.Owner != null)
+                targetForm.Owner = currentForm.Owner;
+            else
+                targetForm.Owner = currentForm;
+
+            targetForm.Show();
+            currentForm.Hide();
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        //  UI 控制元件裝飾
+        // ══════════════════════════════════════════════════════════════════════
 
         public static void MakeRoundedControl(Control ctrl, int radius)
         {
@@ -82,674 +599,100 @@ namespace math_combat
                 path.AddArc(c.Width - 2 * r, c.Height - 2 * r, 2 * r, 2 * r, 0, 90);
                 path.AddArc(0, c.Height - 2 * r, 2 * r, 2 * r, 90, 90);
                 path.CloseFigure();
-
                 c.Region = new Region(path);
             };
         }
 
-        // 滑鼠懸停變色
         public static void MakeFancyControl(Control ctrl, int radius, Color normalColor, Color hoverColor)
         {
-            // 先套用圓角效果
             MakeRoundedControl(ctrl, radius);
-
-            // 設定預設字體顏色
             ctrl.ForeColor = normalColor;
-
-            // 滑鼠滑入
-            ctrl.MouseEnter += (sender, e) =>
-            {
-                ctrl.ForeColor = hoverColor;
-            };
-
-            // 滑鼠離開
-            ctrl.MouseLeave += (sender, e) =>
-            {
-                ctrl.ForeColor = normalColor;
-            };
+            ctrl.MouseEnter += (s, e) => ctrl.ForeColor = hoverColor;
+            ctrl.MouseLeave += (s, e) => ctrl.ForeColor = normalColor;
         }
 
-        //字體載入
+        // ══════════════════════════════════════════════════════════════════════
+        //  卡牌系統
+        // ══════════════════════════════════════════════════════════════════════
 
-
-        //視窗切換
-        public static void SwitchToForm(Form currentForm, Form targetForm)
-        {
-            if (currentForm == null || targetForm == null) return;
-
-            // 設定新視窗的位置與大小同步
-            targetForm.StartPosition = FormStartPosition.Manual;
-            targetForm.Location = currentForm.Location;
-            targetForm.Size = currentForm.Size;
-
-            // 讓新視窗記住原本的owner是誰
-            // 如果目前視窗本身就有owner就把owner傳承給新視窗
-            if (currentForm.Owner != null)
-            {
-                targetForm.Owner = currentForm.Owner;
-            }
-            else
-            {
-                // 如果目前視窗沒有owner那自己就是新視窗的owner
-                targetForm.Owner = currentForm;
-            }
-
-            targetForm.Show();
-            currentForm.Hide();
-        }
-
-        // 1. 定義卡牌類型（全域可用）
         public enum CardType { Number, Operator }
 
-        // 2. 定義卡牌資料結構（全域可用）
         public class Card
         {
-            public int Id { get; set; }
-            public CardType Type { get; set; }
-            public string Value { get; set; }
-            public Image CardImage { get; set; }
+            public int      Id        { get; set; }
+            public CardType Type      { get; set; }
+            public string   Value     { get; set; }
+            public Image    CardImage { get; set; }
         }
 
-        // 牌庫
         public static List<Card> CardDatabase { get; private set; } = new List<Card>();
 
-
-        // 初始化這 14 張標準卡牌，在 HomePage 啟動時呼叫一次即可
         public static void InitializeAllCards()
         {
             CardDatabase.Clear();
 
-            // 數字牌：card_0, card_1 ... card_9
             for (int i = 0; i <= 9; i++)
             {
                 CardDatabase.Add(new Card
                 {
-                    Id = i,
-                    Type = CardType.Number,
-                    Value = i.ToString(),
+                    Id        = i,
+                    Type      = CardType.Number,
+                    Value     = i.ToString(),
                     CardImage = (Image)Properties.Resources.ResourceManager.GetObject($"card_{i}")
                 });
             }
 
-            // 運算子牌：名稱對應你 Resource 裡的實際命名
             var operators = new[]
             {
-                (value: "+", name: "card_plus"),
-                (value: "-", name: "card_sub"),
-                (value: "*", name: "card_mul"),
-                (value: "/", name: "card_div"),
+                (value: "+",  name: "card_plus"),
+                (value: "-",  name: "card_sub"),
+                (value: "*",  name: "card_mul"),
+                (value: "/",  name: "card_div"),
             };
             int id = 10;
             foreach (var op in operators)
             {
                 CardDatabase.Add(new Card
                 {
-                    Id = id++,
-                    Type = CardType.Operator,
-                    Value = op.value,
+                    Id        = id++,
+                    Type      = CardType.Operator,
+                    Value     = op.value,
                     CardImage = (Image)Properties.Resources.ResourceManager.GetObject(op.name)
                 });
             }
         }
 
-        // TODO: 從牌庫隨機抽取 5 張牌組成玩家手牌，確保不重複且符合規則（3 數字 + 2 運算子）
-        public static List<Card> CreateGameHand()
+        /// <summary>
+        /// 根據 Server 下發的 cards 字串列表，建立對應的 Card 物件列表。
+        /// </summary>
+        public static List<Card> BuildHandFromCards(List<string> cardValues)
         {
-            var random = new Random();
             var hand = new List<Card>();
-
-            // 從數字牌（Id 0-9）隨機抽 3 張，不重複
-            var numberCards = CardDatabase
-                .Where(c => c.Type == CardType.Number)
-                .OrderBy(_ => random.Next())
-                .Take(3)
-                .ToList();
-
-            // 從運算子牌（+−×÷）隨機抽 2 張，不重複
-            var operatorCards = CardDatabase
-                .Where(c => c.Type == CardType.Operator)
-                .OrderBy(_ => random.Next())
-                .Take(2)
-                .ToList();
-
-            // 合併後再洗牌，讓手牌順序不固定
-            hand.AddRange(numberCards);
-            hand.AddRange(operatorCards);
-            hand = hand.OrderBy(_ => random.Next()).ToList();
-
+            foreach (var val in cardValues)
+            {
+                Card found = CardDatabase.FirstOrDefault(c => c.Value == val);
+                if (found != null)
+                    hand.Add(found);
+            }
             return hand;
         }
 
-        // 啟動網路連線：優先嘗試連線為 Client，失敗則作為 Host 開啟監聽
-        public static async Task<bool> StartNetwork(int portVal)
+        /// <summary>
+        /// 本機隨機產生手牌（供沒有 Server 時測試用）。
+        /// </summary>
+        public static List<Card> CreateGameHand()
         {
-            port = portVal;
-            try
-            {
-                client = new TcpClient();
-                var connectTask = client.ConnectAsync("127.0.0.1", portVal);
-                if (await Task.WhenAny(connectTask, Task.Delay(1500)) == connectTask)
-                {
-                    await connectTask;
-                    isHost = false;
-                    stream = client.GetStream();
-                    isConnected = true;
-                    isSpectator = false;
-                    
-                    _ = Task.Run(() => ReceiveDataLoop());
-                    
-                    byte[] nameBytes = Encoding.UTF8.GetBytes("NAME:" + player_name);
-                    await stream.WriteAsync(nameBytes, 0, nameBytes.Length);
-                    
-                    return true;
-                }
-                else
-                {
-                    client.Close();
-                    throw new TimeoutException();
-                }
-            }
-            catch
-            {
-                try
-                {
-                    if (client != null) client.Close();
-                    
-                    isHost = true;
-                    isConnected = false;
-                    clientList.Clear();
-                    clientNames.Clear();
-                    
-                    listener = new TcpListener(IPAddress.Any, portVal);
-                    listener.Start();
-                    
-                    _ = Task.Run(() => AcceptClientLoop());
-                    
-                    return true;
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("無法在 Port " + portVal + " 開啟監聽: " + ex.Message, "連線錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    CleanupNetwork();
-                    return false;
-                }
-            }
+            var rng   = new Random();
+            var nums  = CardDatabase.Where(c => c.Type == CardType.Number)
+                                    .OrderBy(_ => rng.Next()).Take(3).ToList();
+            var ops   = CardDatabase.Where(c => c.Type == CardType.Operator)
+                                    .OrderBy(_ => rng.Next()).Take(2).ToList();
+            var hand  = nums.Concat(ops).OrderBy(_ => rng.Next()).ToList();
+            return hand;
         }
 
-        private static async Task AcceptClientLoop()
-        {
-            try
-            {
-                while (listener != null)
-                {
-                    var acceptedClient = await listener.AcceptTcpClientAsync();
-                    bool roomFull = false;
-                    lock (clientList)
-                    {
-                        if (clientList.Count >= 7) // 1 Host + 7 Clients = 8 players max
-                        {
-                            roomFull = true;
-                        }
-                    }
-
-                    if (roomFull)
-                    {
-                        try
-                        {
-                            byte[] fullBytes = Encoding.UTF8.GetBytes("ROOM_FULL");
-                            var s = acceptedClient.GetStream();
-                            s.Write(fullBytes, 0, fullBytes.Length);
-                        }
-                        catch {}
-                        acceptedClient.Close();
-                    }
-                    else
-                    {
-                        lock (clientList)
-                        {
-                            clientList.Add(acceptedClient);
-                        }
-                        _ = Task.Run(() => ReceiveClientDataLoop(acceptedClient));
-                    }
-                }
-            }
-            catch {}
-        }
-
-        private static async Task ReceiveClientDataLoop(TcpClient c)
-        {
-            byte[] buffer = new byte[1024];
-            var s = c.GetStream();
-            try
-            {
-                while (listener != null && c.Connected)
-                {
-                    int bytesRead = await s.ReadAsync(buffer, 0, buffer.Length);
-                    if (bytesRead == 0) break;
-                    
-                    string data = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    ProcessHostReceivedData(c, data);
-                }
-            }
-            catch {}
-            finally
-            {
-                HandleClientDisconnect(c);
-            }
-        }
-
-        private static void ProcessHostReceivedData(TcpClient c, string data)
-        {
-            if (data.StartsWith("NAME:"))
-            {
-                string name = data.Substring(5);
-                lock (clientList)
-                {
-                    int idx = clientList.IndexOf(c);
-                    if (idx >= 0)
-                    {
-                        while (clientNames.Count <= idx)
-                        {
-                            clientNames.Add("");
-                        }
-                        clientNames[idx] = name;
-                    }
-                }
-                BroadcastRoomInfo();
-                BroadcastReadyState();
-            }
-            else if (data == "READY")
-            {
-                lock (clientList)
-                {
-                    int idx = clientList.IndexOf(c);
-                    if (idx == 0)
-                    {
-                        clientReady = true;
-                        CheckStartGame();
-                    }
-                }
-            }
-            else if (data == "UNREADY")
-            {
-                lock (clientList)
-                {
-                    int idx = clientList.IndexOf(c);
-                    if (idx == 0)
-                    {
-                        clientReady = false;
-                        BroadcastReadyState();
-                    }
-                }
-            }
-        }
-
-        public static void Broadcast(string message)
-        {
-            if (!isHost) return;
-            byte[] bytes = Encoding.UTF8.GetBytes(message);
-            lock (clientList)
-            {
-                foreach (var c in clientList)
-                {
-                    try
-                    {
-                        if (c.Connected)
-                        {
-                            var s = c.GetStream();
-                            s.Write(bytes, 0, bytes.Length);
-                        }
-                    }
-                    catch {}
-                }
-            }
-        }
-
-        public static void BroadcastRoomInfo()
-        {
-            if (!isHost) return;
-            StringBuilder sb = new StringBuilder();
-            sb.Append("ROOM_INFO:");
-            sb.Append(player_name);
-            
-            lock (lastRoomInfoNames)
-            {
-                lastRoomInfoNames.Clear();
-                lastRoomInfoNames.Add(player_name);
-                lock (clientList)
-                {
-                    for (int i = 0; i < 7; i++)
-                    {
-                        sb.Append("|");
-                        if (i < clientNames.Count)
-                        {
-                            sb.Append(clientNames[i]);
-                            lastRoomInfoNames.Add(clientNames[i]);
-                        }
-                    }
-                }
-            }
-            Broadcast(sb.ToString());
-            UpdateRoomPageUIFromInfo(player_name, clientNames);
-        }
-
-        public static void BroadcastReadyState()
-        {
-            if (!isHost) return;
-            string msg = "READY_STATE:" + (hostReady ? "true" : "false") + "|" + (clientReady ? "true" : "false");
-            Broadcast(msg);
-            UpdateRoomPageUI();
-        }
-
-        public static void CheckStartGame()
-        {
-            if (!isHost) return;
-            if (hostReady && clientReady)
-            {
-                Broadcast("START_GAME");
-                if (roomPage != null)
-                {
-                    roomPage.BeginInvoke(new Action(() => {
-                        SwitchToForm(roomPage, gamePage);
-                    }));
-                }
-            }
-            else
-            {
-                BroadcastReadyState();
-            }
-        }
-
-        private static async Task ReceiveDataLoop()
-        {
-            byte[] buffer = new byte[1024];
-            try
-            {
-                while (isConnected && stream != null)
-                {
-                    int bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-                    if (bytesRead == 0)
-                    {
-                        HandleDisconnect();
-                        break;
-                    }
-                    
-                    string data = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    ProcessClientReceivedData(data);
-                }
-            }
-            catch
-            {
-                HandleDisconnect();
-            }
-        }
-
-        private static void ProcessClientReceivedData(string data)
-        {
-            if (data == "ROOM_FULL")
-            {
-                isConnected = false;
-                if (client != null)
-                {
-                    try { client.Close(); } catch {}
-                    client = null;
-                }
-                stream = null;
-                
-                if (roomPage != null)
-                {
-                    roomPage.BeginInvoke(new Action(() => {
-                        MessageBox.Show("房間已滿員，無法進入！", "房間滿員", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        SwitchToForm(roomPage, homePage);
-                    }));
-                }
-            }
-            else if (data.StartsWith("ROOM_INFO:"))
-            {
-                string infoStr = data.Substring(10);
-                string[] parts = infoStr.Split('|');
-                
-                lock (lastRoomInfoNames)
-                {
-                    lastRoomInfoNames.Clear();
-                    foreach (var p in parts)
-                    {
-                        if (!string.IsNullOrEmpty(p))
-                        {
-                            lastRoomInfoNames.Add(p);
-                        }
-                    }
-                }
-                
-                string p1 = parts[0];
-                List<string> guests = new List<string>();
-                for (int i = 1; i < parts.Length; i++)
-                {
-                    guests.Add(parts[i]);
-                }
-                
-                int myIdx = -1;
-                for (int i = 0; i < parts.Length; i++)
-                {
-                    if (parts[i] == player_name)
-                    {
-                        myIdx = i;
-                        break;
-                    }
-                }
-                
-                if (myIdx >= 2)
-                {
-                    isSpectator = true;
-                }
-                else
-                {
-                    isSpectator = false;
-                }
-                
-                UpdateRoomPageUIFromInfo(p1, guests);
-            }
-            else if (data.StartsWith("READY_STATE:"))
-            {
-                string[] parts = data.Substring(12).Split('|');
-                hostReady = parts[0] == "true";
-                clientReady = parts[1] == "true";
-                UpdateRoomPageUI();
-            }
-            else if (data == "START_GAME")
-            {
-                if (roomPage != null)
-                {
-                    roomPage.BeginInvoke(new Action(() => {
-                        SwitchToForm(roomPage, gamePage);
-                    }));
-                }
-            }
-            else if (data == "EXIT_GAME")
-            {
-                if (gamePage != null && gamePage.Visible)
-                {
-                    gamePage.BeginInvoke(new Action(() => {
-                        SwitchToForm(gamePage, roomPage);
-                    }));
-                }
-            }
-        }
-
-        private static void HandleClientDisconnect(TcpClient c)
-        {
-            lock (clientList)
-            {
-                int idx = clientList.IndexOf(c);
-                if (idx >= 0)
-                {
-                    clientList.RemoveAt(idx);
-                    if (idx < clientNames.Count)
-                    {
-                        clientNames.RemoveAt(idx);
-                    }
-                    
-                    if (idx == 0)
-                    {
-                        clientReady = false;
-                        if (gamePage != null && gamePage.Visible)
-                        {
-                            opponentDisconnected = true;
-                        }
-                        else
-                        {
-                            if (homePage != null)
-                            {
-                                homePage.BeginInvoke(new Action(() => MessageBox.Show("對手已中斷連線。", "連線中斷", MessageBoxButtons.OK, MessageBoxIcon.Information)));
-                            }
-                        }
-                    }
-                }
-            }
-            BroadcastRoomInfo();
-            BroadcastReadyState();
-        }
-
-        private static void HandleDisconnect()
-        {
-            isConnected = false;
-            isSpectator = false;
-            hostReady = false;
-            clientReady = false;
-            
-            if (client != null)
-            {
-                try { client.Close(); } catch {}
-                client = null;
-            }
-            stream = null;
-            
-            if (gamePage != null && gamePage.Visible)
-            {
-                opponentDisconnected = true;
-                needHandoff = true;
-            }
-            else
-            {
-                PerformLobbyHandoff();
-            }
-        }
-
-        private static void UpdateRoomPageUI()
-        {
-            if (roomPage != null)
-            {
-                roomPage.UpdateNames();
-            }
-        }
-
-        private static void UpdateRoomPageUIFromInfo(string p1, List<string> guests)
-        {
-            if (roomPage != null)
-            {
-                roomPage.UpdateNamesFromInfo(p1, guests);
-            }
-        }
-
-        public static void PerformLobbyHandoff()
-        {
-            needHandoff = false;
-            if (lastRoomInfoNames.Count > 1)
-            {
-                string oldHost = lastRoomInfoNames[0];
-                lastRoomInfoNames.RemoveAt(0); // 移除舊房主
-                string nextHost = lastRoomInfoNames[0]; // 新房主名字
-                
-                if (player_name == nextHost)
-                {
-                    // 我們自動成為新房主
-                    if (roomPage != null)
-                    {
-                        roomPage.BeginInvoke(new Action(async () => {
-                            CleanupNetwork();
-                            bool success = await StartNetwork(port);
-                            if (success)
-                            {
-                                UpdateRoomPageUI();
-                            }
-                        }));
-                    }
-                }
-                else
-                {
-                    // 重新連線新房主，靜默重試
-                    if (roomPage != null)
-                    {
-                        roomPage.BeginInvoke(new Action(() => {
-                            _ = Task.Run(async () => {
-                                CleanupNetwork();
-                                await Task.Delay(1500); // 稍等讓新房主先開啟 Port
-                                if (roomPage != null)
-                                {
-                                    roomPage.BeginInvoke(new Action(async () => {
-                                        bool success = await StartNetwork(port);
-                                        if (success)
-                                        {
-                                            UpdateRoomPageUI();
-                                        }
-                                    }));
-                                }
-                            });
-                        }));
-                    }
-                }
-            }
-            else
-            {
-                if (roomPage != null)
-                {
-                    roomPage.BeginInvoke(new Action(() => {
-                        roomPage.UpdateNamesFromInfo("房主", new List<string>());
-                    }));
-                }
-                if (homePage != null)
-                {
-                    homePage.BeginInvoke(new Action(() => MessageBox.Show("已中斷與房主的連線。", "連線中斷", MessageBoxButtons.OK, MessageBoxIcon.Information)));
-                }
-            }
-        }
-
-        public static void CleanupNetwork()
-        {
-            isConnected = false;
-            isSpectator = false;
-            hostReady = false;
-            clientReady = false;
-            opponentDisconnected = false;
-            needHandoff = false;
-            hostName = "";
-            player2Name = "";
-            
-            lock (clientList)
-            {
-                foreach (var c in clientList)
-                {
-                    try { c.Close(); } catch {}
-                }
-                clientList.Clear();
-                clientNames.Clear();
-            }
-            
-            if (stream != null)
-            {
-                try { stream.Close(); } catch {}
-                stream = null;
-            }
-            if (client != null)
-            {
-                try { client.Close(); } catch {}
-                client = null;
-            }
-            if (listener != null)
-            {
-                try { listener.Stop(); } catch {}
-                listener = null;
-            }
-        }
+        // 音量設定
+        public static int vulume_sfx_ref => vulume_sfx;
+        public static int volume_bgm_ref => volume_bgm;
     }
 }

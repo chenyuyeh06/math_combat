@@ -12,8 +12,8 @@ namespace math_combat
 {
     public partial class RoomPage : Form
     {
-        private HomePage homePage => GameUnits.homePage;
-        private GamePage gamePage => GameUnits.gamePage;
+        private HomePage   homePage   => GameUnits.homePage;
+        private GamePage   gamePage   => GameUnits.gamePage;
         private ResultPage resultPage => GameUnits.resultPage;
 
         public RoomPage(HomePage homePage)
@@ -32,178 +32,152 @@ namespace math_combat
             GameUnits.MakeRoundedControl(player2_bg, 15);
             GameUnits.MakeRoundedControl(panel_guest_list, 15);
 
-            //hover color for fonts
+            // hover color for fonts
             GameUnits.MakeFancyControl(start_game_button, 15, Color.Black, Color.WhiteSmoke);
-            GameUnits.MakeFancyControl(round_sub, 15, Color.Black, Color.WhiteSmoke);
+            GameUnits.MakeFancyControl(round_sub,  15, Color.Black, Color.WhiteSmoke);
             GameUnits.MakeFancyControl(round_plus, 15, Color.Black, Color.WhiteSmoke);
-            GameUnits.MakeFancyControl(sec_sub, 15, Color.Black, Color.WhiteSmoke);
-            GameUnits.MakeFancyControl(sec_plus, 15, Color.Black, Color.WhiteSmoke);
-
-
+            GameUnits.MakeFancyControl(sec_sub,    15, Color.Black, Color.WhiteSmoke);
+            GameUnits.MakeFancyControl(sec_plus,   15, Color.Black, Color.WhiteSmoke);
         }
 
-        private void pictureBox2_Click(object sender, EventArgs e)
+        private void RoomPage_VisibleChanged(object sender, EventArgs e)
         {
+            if (!this.Visible) return;
 
+            room_number.Text = "房間號碼：" + GameUnits.room_number;
+
+            // 重置準備狀態
+            GameUnits.hostReady   = false;
+            GameUnits.clientReady = false;
+
+            RefreshRoomInfo();
         }
 
-        private void player1_name_Click(object sender, EventArgs e)
-        {
-
-        }
+        // ── 準備 / 開始按鈕 ────────────────────────────────────────────────────
 
         private void start_game_button_Click(object sender, EventArgs e)
         {
-            // TODO: 傳送rounds和secs的數值到GamePage, 檢查進入遊戲的條件
-            
+            if (GameUnits.isSpectator) return;
+
             if (GameUnits.isHost)
             {
-                GameUnits.hostReady = !GameUnits.hostReady;
-                GameUnits.CheckStartGame();
+                // Player1（房主）送 START_GAME
+                GameUnits.hostReady = true;
+                GameUnits.SendStartGame();
+                UpdateButtonState();
             }
             else
             {
-                if (!GameUnits.isSpectator)
-                {
-                    GameUnits.clientReady = !GameUnits.clientReady;
-                    byte[] bytes = Encoding.UTF8.GetBytes(GameUnits.clientReady ? "READY" : "UNREADY");
-                    try
-                    {
-                        GameUnits.stream.Write(bytes, 0, bytes.Length);
-                    }
-                    catch {}
-                    UpdateNames();
-                }
+                // Player2 切換準備狀態
+                GameUnits.ToggleClientReady();
+                UpdateButtonState();
             }
         }
 
+        // ── 房間設定按鈕（只有房主可調整）─────────────────────────────────────
+
         private void round_plus_Click(object sender, EventArgs e)
         {
-            if (int.Parse(round_set.Text) < 5)
+            if (!GameUnits.isHost) return;
+            if (GameUnits.rounds < 5)
             {
-                GameUnits.rounds = 5;
+                GameUnits.rounds = GameUnits.rounds + 1;
                 round_set.Text = GameUnits.rounds.ToString();
+                GameUnits.SendUpdateRoom();
             }
         }
 
         private void round_sub_Click(object sender, EventArgs e)
         {
-            if (int.Parse(round_set.Text) > 3)
+            if (!GameUnits.isHost) return;
+            if (GameUnits.rounds > 1)
             {
-                GameUnits.rounds = 3;
+                GameUnits.rounds = GameUnits.rounds - 1;
                 round_set.Text = GameUnits.rounds.ToString();
+                GameUnits.SendUpdateRoom();
             }
         }
 
         private void sec_plus_Click(object sender, EventArgs e)
         {
-            if (int.Parse(sec_set.Text) < 10 && int.Parse(sec_set.Text) > 2)
+            if (!GameUnits.isHost) return;
+            if (GameUnits.secs < 60)
             {
-                GameUnits.secs = int.Parse(sec_set.Text) + 1;
+                GameUnits.secs = GameUnits.secs + 5;
                 sec_set.Text = GameUnits.secs.ToString();
+                GameUnits.SendUpdateRoom();
             }
         }
 
         private void sec_sub_Click(object sender, EventArgs e)
         {
-            if (int.Parse(sec_set.Text) <= 10 && int.Parse(sec_set.Text) > 3)
+            if (!GameUnits.isHost) return;
+            if (GameUnits.secs > 5)
             {
-                GameUnits.secs = int.Parse(sec_set.Text) - 1;
+                GameUnits.secs = GameUnits.secs - 5;
                 sec_set.Text = GameUnits.secs.ToString();
+                GameUnits.SendUpdateRoom();
             }
         }
 
+        // ── 返回首頁 ───────────────────────────────────────────────────────────
+
         private void back_to_home_page_Click(object sender, EventArgs e)
         {
-            GameUnits.CleanupNetwork();
+            GameUnits.SendLeaveAndCleanup();
             GameUnits.SwitchToForm(this, homePage);
         }
 
         private void RoomPage_FormClosing(object sender, FormClosingEventArgs e)
         {
-            GameUnits.CleanupNetwork();
+            GameUnits.SendLeaveAndCleanup();
             GameUnits.SwitchToForm(this, homePage);
         }
 
-        private void RoomPage_FormClosed(object sender, FormClosedEventArgs e)
-        {
-        }
+        private void RoomPage_FormClosed(object sender, FormClosedEventArgs e) { }
 
-        private void RoomPage_VisibleChanged(object sender, EventArgs e)
-        {
-            if (this.Visible)
-            {
-                room_number.Text = "房間號碼：" + GameUnits.room_number;
-                if (GameUnits.isHost)
-                {
-                    GameUnits.hostReady = false;
-                    GameUnits.clientReady = false;
-                    GameUnits.BroadcastRoomInfo();
-                    GameUnits.BroadcastReadyState();
-                }
-                else
-                {
-                    GameUnits.clientReady = false;
-                    UpdateNames();
-                }
-            }
-        }
+        // ── 公開 UI 更新方法（由 GameUnits 觸發）────────────────────────────────
 
-        public void UpdateNames()
+        /// <summary>GameUnits 收到 ROOM_INFO / READY_STATE / ROOM_UPDATED 後呼叫此方法</summary>
+        public void RefreshRoomInfo()
         {
             if (this.InvokeRequired)
             {
-                this.BeginInvoke(new Action(UpdateNames));
+                this.BeginInvoke(new Action(RefreshRoomInfo));
                 return;
             }
 
+            // ── 玩家名稱 ──
             if (GameUnits.isHost)
             {
                 player1_name.Text = GameUnits.player_name;
-                player2_name.Text = (GameUnits.clientNames.Count > 0 && !string.IsNullOrEmpty(GameUnits.clientNames[0])) ? GameUnits.clientNames[0] : "等候玩家加入...";
+                player2_name.Text = string.IsNullOrEmpty(GameUnits.player2Name)
+                    ? "等候對手加入..." : GameUnits.player2Name;
             }
             else
             {
-                player1_name.Text = string.IsNullOrEmpty(GameUnits.hostName) ? "房主" : GameUnits.hostName;
-                player2_name.Text = string.IsNullOrEmpty(GameUnits.player2Name) ? GameUnits.player_name : GameUnits.player2Name;
+                player1_name.Text = string.IsNullOrEmpty(GameUnits.hostName)
+                    ? "房主" : GameUnits.hostName;
+                player2_name.Text = GameUnits.player_name;
             }
 
-            UpdateButtonState();
-        }
+            // ── 房間設定顯示 ──
+            round_set.Text = GameUnits.rounds.ToString();
+            sec_set.Text   = GameUnits.secs.ToString();
 
-        public void UpdateNamesFromInfo(string p1, List<string> guests)
-        {
-            if (this.InvokeRequired)
-            {
-                this.BeginInvoke(new Action(() => UpdateNamesFromInfo(p1, guests)));
-                return;
-            }
-
-            GameUnits.hostName = p1;
-            if (guests.Count > 0)
-            {
-                GameUnits.player2Name = guests[0];
-            }
-            else
-            {
-                GameUnits.player2Name = "";
-            }
-
-            player1_name.Text = p1;
-            player2_name.Text = !string.IsNullOrEmpty(GameUnits.player2Name) ? GameUnits.player2Name : "等候玩家加入...";
-
-            // 更新觀戰名單
+            // ── 觀戰者列表 ──
             Label[] spectatorLabels = new Label[] { label3, label4, label5, label6, label7, label8 };
+            var specs = GameUnits.spectatorNames;
             for (int i = 0; i < spectatorLabels.Length; i++)
             {
-                if (i + 1 < guests.Count && !string.IsNullOrEmpty(guests[i + 1]))
+                if (i < specs.Count && !string.IsNullOrEmpty(specs[i]))
                 {
-                    spectatorLabels[i].Text = guests[i + 1];
+                    spectatorLabels[i].Text    = specs[i];
                     spectatorLabels[i].Visible = true;
                 }
                 else
                 {
-                    spectatorLabels[i].Text = "";
+                    spectatorLabels[i].Text    = "";
                     spectatorLabels[i].Visible = false;
                 }
             }
@@ -213,54 +187,60 @@ namespace math_combat
 
         public void UpdateButtonState()
         {
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(new Action(UpdateButtonState));
+                return;
+            }
+
+            if (GameUnits.isSpectator)
+            {
+                start_game_button.Text    = "觀戰中...";
+                start_game_button.Enabled = false;
+                return;
+            }
+
             if (GameUnits.isHost)
             {
-                bool hasClient = GameUnits.clientList.Count > 0;
-                if (!hasClient)
+                bool hasPlayer2 = !string.IsNullOrEmpty(GameUnits.player2Name);
+                if (!hasPlayer2)
                 {
-                    start_game_button.Text = "等候對手...";
+                    start_game_button.Text    = "等候對手...";
+                    start_game_button.Enabled = false;
+                }
+                else if (GameUnits.hostReady)
+                {
+                    start_game_button.Text    = "已送出(等待對手)";
                     start_game_button.Enabled = false;
                 }
                 else
                 {
-                    if (GameUnits.hostReady)
-                    {
-                        start_game_button.Text = "已準備(等待中)";
-                        start_game_button.Enabled = true;
-                    }
-                    else
-                    {
-                        start_game_button.Text = "準備對戰";
-                        start_game_button.Enabled = true;
-                    }
+                    start_game_button.Text    = "開始遊戲";
+                    start_game_button.Enabled = true;
                 }
             }
             else
             {
-                if (GameUnits.isSpectator)
+                // Player2
+                if (GameUnits.clientReady)
                 {
-                    start_game_button.Text = "觀戰中...";
-                    start_game_button.Enabled = false;
+                    start_game_button.Text    = "已準備(等待開始)";
+                    start_game_button.Enabled = true;
                 }
                 else
                 {
-                    if (GameUnits.clientReady)
-                    {
-                        start_game_button.Text = "已準備(等待中)";
-                        start_game_button.Enabled = true;
-                    }
-                    else
-                    {
-                        start_game_button.Text = "準備對戰";
-                        start_game_button.Enabled = true;
-                    }
+                    start_game_button.Text    = "準備對戰";
+                    start_game_button.Enabled = true;
                 }
             }
         }
 
-        private void pictureBox1_Click(object sender, EventArgs e)
-        {
+        // ── 舊有相容保留 ────────────────────────────────────────────────────────
+        public void UpdateNames()         => RefreshRoomInfo();
+        public void UpdateNamesFromInfo(string p1, List<string> guests) => RefreshRoomInfo();
 
-        }
+        private void pictureBox2_Click(object sender, EventArgs e) { }
+        private void player1_name_Click(object sender, EventArgs e) { }
+        private void pictureBox1_Click(object sender, EventArgs e)  { }
     }
 }

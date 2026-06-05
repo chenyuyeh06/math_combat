@@ -44,6 +44,7 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="System.Web.Extensions" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GamePage.cs">
@@ -53,6 +54,7 @@
       <DependentUpon>GamePage.cs</DependentUpon>
     </Compile>
     <Compile Include="GameUnits.cs" />
+    <Compile Include="NetworkMessage.cs" />
     <Compile Include="HomePage.cs">
       <SubType>Form</SubType>
     </Compile>

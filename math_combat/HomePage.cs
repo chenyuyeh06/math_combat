@@ -17,9 +17,12 @@ namespace math_combat
     {
         private PrivateFontCollection privateFonts = new PrivateFontCollection();
 
-        private RoomPage roomPage => GameUnits.roomPage;
-        private GamePage gamePage => GameUnits.gamePage;
+        private RoomPage   roomPage   => GameUnits.roomPage;
+        private GamePage   gamePage   => GameUnits.gamePage;
         private ResultPage resultPage => GameUnits.resultPage;
+
+        // true = 建立房間；false = 加入房間
+        private bool _createMode = false;
 
         public HomePage()
         {
@@ -81,8 +84,10 @@ namespace math_combat
                 MessageBox.Show("從資源載入字體失敗: " + ex.Message);
             }
         }
+        // enter_game 按鈕（唯一入口）
         private void button1_Click(object sender, EventArgs e)
         {
+            _createMode = false; // 預設為加入模式
             input_player_name.Visible = true;
             input_room_number.Visible = false;
             input_player_name.BringToFront();
@@ -189,21 +194,21 @@ namespace math_combat
         {
             if (e.KeyChar == (char)Keys.Enter)
             {
-                if (textBox1.Text.Length > 0)
+                string roomId = textBox1.Text.Trim();
+                if (roomId.Length > 0)
                 {
-                    if (int.TryParse(textBox1.Text, out int portVal) && portVal > 0 && portVal <= 65535)
+                    textBox1.Enabled = false;
+                    // StartNetwork 連到 Server 後送 CREATE_ROOM 或 JOIN_ROOM
+                    // UI 切換由 GameUnits.ProcessMessage 在收到 ROOM_CREATED / ROOM_JOINED 後觸發
+                    bool success = await GameUnits.StartNetwork(roomId, _createMode);
+                    textBox1.Enabled = true;
+
+                    if (!success)
                     {
-                        textBox1.Enabled = false;
-                        GameUnits.room_number = textBox1.Text;
-                        bool success = await GameUnits.StartNetwork(portVal);
-                        textBox1.Enabled = true;
-                        
-                        if (success)
-                        {
-                            input_room_number.Visible = false;
-                            GameUnits.SwitchToForm(this, roomPage);
-                        }
+                        // 連線失敗，保持在 HomePage
+                        input_room_number.Visible = false;
                     }
+                    // 成功時 GameUnits 會自動切換到 RoomPage
                 }
             }
         }
