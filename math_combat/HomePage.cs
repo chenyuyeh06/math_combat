@@ -27,6 +27,41 @@ namespace math_combat
         public HomePage()
         {
             InitializeComponent();
+            this.VisibleChanged += HomePage_VisibleChanged;
+        }
+
+        private void HomePage_VisibleChanged(object sender, EventArgs e)
+        {
+            if (this.Visible)
+            {
+                // 重置回初始選單狀態，隱藏各輸入面板與子選單
+                input_player_name.Visible = false;
+                input_room_number.Visible = false;
+                game_rule.Visible = false;
+                volumn_settings.Visible = false;
+                textBox1.Text = "";
+                textBox2.Text = "";
+                textBox1.Enabled = true;
+                textBox2.Enabled = true;
+            }
+        }
+
+        public void ResetToRoomInput()
+        {
+            input_room_number.Visible = true;
+            input_player_name.Visible = false;
+            textBox1.Text = "";
+            textBox1.Enabled = true;
+            textBox1.Focus();
+        }
+
+        public void ResetToNameInput()
+        {
+            input_player_name.Visible = true;
+            input_room_number.Visible = false;
+            textBox2.Text = "";
+            textBox2.Enabled = true;
+            textBox2.Focus();
         }
 
         private void Form1_Load(object sender, EventArgs e)

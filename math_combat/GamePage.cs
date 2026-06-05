@@ -78,30 +78,51 @@ namespace math_combat
             GameUnits.wins1 = m.wins1;
             GameUnits.wins2 = m.wins2;
             UpdateScoreBoard();
+
+            // 檢查是否已達到贏得對戰的勝場門檻 (過半勝出)
+            int threshold = (GameUnits.rounds / 2) + 1;
+            if (GameUnits.wins1 >= threshold || GameUnits.wins2 >= threshold)
+            {
+                // 提前結算！建立一個 GameOverMsg 物件來觸發 OnGameOver
+                var gameOverMsg = new GameOverMsg
+                {
+                    wins1 = GameUnits.wins1,
+                    wins2 = GameUnits.wins2,
+                    result = (GameUnits.wins1 == GameUnits.wins2) ? "DRAW" :
+                             ((GameUnits.isSpectator || GameUnits.isHost) 
+                               ? (GameUnits.wins1 > GameUnits.wins2 ? "WIN" : "LOSE")
+                               : (GameUnits.wins2 > GameUnits.wins1 ? "WIN" : "LOSE"))
+                };
+                OnGameOver(gameOverMsg);
+            }
         }
 
         /// <summary>收到 GAME_OVER：顯示最終結果</summary>
         public void OnGameOver(GameOverMsg m)
         {
+            if (GameUnits.currentPage == GameUnits.PageState.Result) return;
+
             StopRoundTimer();
 
-            string finalResult = m.result == "WIN"  ? "🏆 你贏了！" :
-                                 m.result == "LOSE" ? "💀 你輸了！" : "🤝 平局！";
-
-            string msg = $"{finalResult}\n\n最終比數　{GetP1Name()} {m.wins1} : {m.wins2} {GetP2Name()}";
-
-            var dlg = MessageBox.Show(msg + "\n\n回到大廳？", "遊戲結束",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-
-            if (dlg == DialogResult.Yes)
+            bool isDraw = (m.wins1 == m.wins2);
+            string winnerName = "";
+            if (!isDraw)
             {
-                GameUnits.SendReturnRoom();
-                GameUnits.SwitchToForm(this, roomPage);
+                winnerName = (m.wins1 > m.wins2) ? GetP1Name() : GetP2Name();
+            }
+
+            // 使用專屬的結算頁面顯示最終結果
+            var resultPage = GameUnits.resultPage;
+            if (resultPage != null)
+            {
+                resultPage.SetupResult(GameUnits.room_number, winnerName, isDraw);
+                GameUnits.SwitchToForm(this, resultPage);
             }
             else
             {
-                GameUnits.SendLeaveAfterGame();
-                GameUnits.SwitchToForm(this, homePage);
+                // 後備防禦邏輯，避免沒有結算頁面時出錯
+                GameUnits.SendReturnRoom();
+                GameUnits.SwitchToForm(this, roomPage);
             }
         }
 
@@ -114,7 +135,19 @@ namespace math_combat
             tableLayout_HandCards.SuspendLayout();
             tableLayout_HandCards.Controls.Clear();
 
+            // 動態配置 TableLayoutPanel 以容納任意數量的卡牌並避免版面跑掉
             var hand = GameUnits.BuildHandFromCards(cardValues);
+            tableLayout_HandCards.ColumnCount = Math.Max(1, hand.Count);
+            tableLayout_HandCards.ColumnStyles.Clear();
+            for (int i = 0; i < tableLayout_HandCards.ColumnCount; i++)
+            {
+                tableLayout_HandCards.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100f / tableLayout_HandCards.ColumnCount));
+            }
+
+            tableLayout_HandCards.RowCount = 1;
+            tableLayout_HandCards.RowStyles.Clear();
+            tableLayout_HandCards.RowStyles.Add(new RowStyle(SizeType.Percent, 100f));
+
             for (int i = 0; i < hand.Count; i++)
             {
                 var card = hand[i];
@@ -124,9 +157,12 @@ namespace math_combat
                     SizeMode = PictureBoxSizeMode.Zoom,
                     Dock     = DockStyle.Fill,
                     Tag      = card,
-                    Cursor   = Cursors.Hand,
+                    Cursor   = GameUnits.isSpectator ? Cursors.Default : Cursors.Hand,
                 };
-                pb.Click += HandCard_Click;
+                if (!GameUnits.isSpectator)
+                {
+                    pb.Click += HandCard_Click;
+                }
                 tableLayout_HandCards.Controls.Add(pb, i, 0);
             }
             tableLayout_HandCards.ResumeLayout();
@@ -150,7 +186,7 @@ namespace math_combat
                     Dock      = DockStyle.Fill,
                     Tag       = null,
                     BackColor = Color.WhiteSmoke,
-                    Cursor    = Cursors.Hand,
+                    Cursor    = GameUnits.isSpectator ? Cursors.Default : Cursors.Hand,
                 };
                 _boardSlots[i] = slot;
                 tableLayout_BoardCards.Controls.Add(slot, i, 0);
@@ -214,6 +250,13 @@ namespace math_combat
 
         private void UpdateActionButtons()
         {
+            if (GameUnits.isSpectator)
+            {
+                check_card.Visible  = false;
+                cancel_card.Visible = false;
+                return;
+            }
+
             bool hasCard = _boardSlots.Any(s => s != null && s.Tag is GameUnits.Card);
             check_card.Visible  = hasCard && !_scoreSubmitted;
             cancel_card.Visible = hasCard && !_scoreSubmitted;
@@ -225,7 +268,7 @@ namespace math_combat
 
         private void check_card_Click(object sender, EventArgs e)
         {
-            if (_scoreSubmitted) return;
+            if (_scoreSubmitted || GameUnits.isSpectator) return;
 
             var played = _boardSlots
                 .Where(s => s != null && s.Tag is GameUnits.Card)
@@ -270,26 +313,27 @@ namespace math_combat
 
             // 計算
             string expression = string.Join(" ", played.Select(c => c.Value));
+            // 為了在 DataTable.Compute 中強制進行浮點數除法，將數字都加上 .0
+            string evalExpression = string.Join(" ", played.Select(c => 
+                c.Type == GameUnits.CardType.Number ? c.Value + ".0" : c.Value));
+
             double result;
             try
             {
-                var raw = new DataTable().Compute(expression, null);
+                var raw = new DataTable().Compute(evalExpression, null);
                 result = Convert.ToDouble(raw);
                 if (double.IsInfinity(result) || double.IsNaN(result))
                 {
-                    MessageBox.Show("不能除以零", "計算錯誤", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    result = -999;
                 }
             }
             catch
             {
-                MessageBox.Show($"無法計算算式：{expression}", "計算錯誤", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                result = -999;
             }
 
-            string resultStr = (result == Math.Floor(result))
-                ? ((int)result).ToString()
-                : result.ToString("0.##");
+            string resultStr = (result == -999) ? "計算錯誤 (-999)" :
+                               ((result == Math.Floor(result)) ? ((int)result).ToString() : result.ToString("0.##"));
 
             MessageBox.Show($"{expression} = {resultStr}", "出牌結果");
 
@@ -337,7 +381,7 @@ namespace math_combat
                 if (_timerSeconds <= 0)
                 {
                     StopRoundTimer();
-                    if (!_scoreSubmitted)
+                    if (!_scoreSubmitted && !GameUnits.isSpectator)
                     {
                         // 時間到，送 -999 表示放棄
                         _scoreSubmitted = true;
@@ -377,8 +421,11 @@ namespace math_combat
                 player2.Text = $"{GetP2Name()} 勝 {GameUnits.wins2}";
         }
 
-        private string GetP1Name() => GameUnits.isHost ? GameUnits.player_name : GameUnits.hostName;
-        private string GetP2Name() => GameUnits.isHost ? GameUnits.player2Name : GameUnits.player_name;
+        private string GetP1Name() => GameUnits.isSpectator ? GameUnits.hostName :
+                                      (GameUnits.isHost ? GameUnits.player_name : GameUnits.hostName);
+
+        private string GetP2Name() => GameUnits.isSpectator ? GameUnits.player2Name :
+                                      (GameUnits.isHost ? GameUnits.player2Name : GameUnits.player_name);
 
         // ══════════════════════════════════════════════════════════════════════
         //  視窗關閉

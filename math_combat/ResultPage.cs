@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -55,13 +55,30 @@ namespace math_combat
 
         }
 
+        public void SetupResult(string roomId, string winnerName, bool isDraw)
+        {
+            RoomNumber.Text = "房間號碼：" + roomId;
+            if (isDraw)
+            {
+                player1.Text = "雙方平手";
+                pictureBox2.Visible = false; // 隱藏皇冠
+            }
+            else
+            {
+                player1.Text = winnerName;
+                pictureBox2.Visible = true; // 顯示皇冠
+            }
+        }
+
         private void back_to_room_Click(object sender, EventArgs e)
         {
+            GameUnits.SendReturnRoom();
             GameUnits.SwitchToForm(this, roomPage);
         }
 
         private void back_to_home_page_Click(object sender, EventArgs e)
         {
+            GameUnits.SendLeaveAfterGame();
             GameUnits.SwitchToForm(this, homePage);
         }
     }

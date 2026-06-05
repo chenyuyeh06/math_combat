@@ -61,14 +61,21 @@ namespace math_combat
 
             if (GameUnits.isHost)
             {
-                // Player1（房主）送 START_GAME
+                // PDF 3-3: Player1 送 START_GAME（必須在 Player2 READY 之後）
+                if (!GameUnits.clientReady)
+                {
+                    MessageBox.Show("請等對手準備完成。", "尚未準備", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
                 GameUnits.hostReady = true;
+                // 某些 Server 實作會檢查雙方的 ready 狀態，因此先送 READY 再送 START_GAME 確保滿足條件
+                GameUnits.SendJson(new ReadyMsg());
                 GameUnits.SendStartGame();
                 UpdateButtonState();
             }
             else
             {
-                // Player2 切換準備狀態
+                // PDF 3-3: Player2 切換 READY/UNREADY狀態
                 GameUnits.ToggleClientReady();
                 UpdateButtonState();
             }
@@ -147,8 +154,14 @@ namespace math_combat
                 return;
             }
 
-            // ── 玩家名稱 ──
-            if (GameUnits.isHost)
+            if (GameUnits.isSpectator)
+            {
+                player1_name.Text = string.IsNullOrEmpty(GameUnits.hostName)
+                    ? "房主" : GameUnits.hostName;
+                player2_name.Text = string.IsNullOrEmpty(GameUnits.player2Name)
+                    ? "等候對手加入..." : GameUnits.player2Name;
+            }
+            else if (GameUnits.isHost)
             {
                 player1_name.Text = GameUnits.player_name;
                 player2_name.Text = string.IsNullOrEmpty(GameUnits.player2Name)
@@ -202,15 +215,23 @@ namespace math_combat
 
             if (GameUnits.isHost)
             {
-                bool hasPlayer2 = !string.IsNullOrEmpty(GameUnits.player2Name);
+                // PDF 3-3: Player1 按鈕狀態
+                bool hasPlayer2   = !string.IsNullOrEmpty(GameUnits.player2Name);
+                bool player2Ready = GameUnits.clientReady;  // Player2 已送 READY
+
                 if (!hasPlayer2)
                 {
-                    start_game_button.Text    = "等候對手...";
+                    start_game_button.Text    = "等候對手加入...";
+                    start_game_button.Enabled = false;
+                }
+                else if (!player2Ready)
+                {
+                    start_game_button.Text    = "等候對手準備...";
                     start_game_button.Enabled = false;
                 }
                 else if (GameUnits.hostReady)
                 {
-                    start_game_button.Text    = "已送出(等待對手)";
+                    start_game_button.Text    = "已送出開始(等待中)";
                     start_game_button.Enabled = false;
                 }
                 else
@@ -221,11 +242,11 @@ namespace math_combat
             }
             else
             {
-                // Player2
+                // PDF 3-3: Player2 按鈕狀態
                 if (GameUnits.clientReady)
                 {
-                    start_game_button.Text    = "已準備(等待開始)";
-                    start_game_button.Enabled = true;
+                    start_game_button.Text    = "已準備(等待房主開始)";
+                    start_game_button.Enabled = true;  // 可以再次點擊取消準備
                 }
                 else
                 {

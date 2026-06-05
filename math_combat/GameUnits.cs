@@ -22,6 +22,15 @@ namespace math_combat
         public static GamePage   gamePage   = null;
         public static ResultPage resultPage = null;
 
+        public enum PageState
+        {
+            Home,
+            Room,
+            Game,
+            Result
+        }
+        public static PageState currentPage = PageState.Home;
+
         public static void Initialize()
         {
             InitializeAllCards();
@@ -104,7 +113,9 @@ namespace math_combat
                 isConnected = true;
 
                 // 啟動背景接收迴圈
-                _ = Task.Run(() => ReceiveLoop());
+                var currentTcp = _tcp;
+                var currentReader = _reader;
+                _ = Task.Run(() => ReceiveLoop(currentTcp, currentReader));
 
                 // 送出建立 / 加入訊息
                 if (create)
@@ -154,13 +165,13 @@ namespace math_combat
         //  接收迴圈
         // ══════════════════════════════════════════════════════════════════════
 
-        private static async Task ReceiveLoop()
+        private static async Task ReceiveLoop(TcpClient client, StreamReader reader)
         {
             try
             {
-                while (isConnected && _reader != null)
+                while (isConnected && _tcp == client && reader != null)
                 {
-                    string line = await _reader.ReadLineAsync();
+                    string line = await reader.ReadLineAsync();
                     if (line == null) break; // Server 斷線
                     if (string.IsNullOrWhiteSpace(line)) continue;
                     ProcessMessage(line);
@@ -169,7 +180,7 @@ namespace math_combat
             catch { }
             finally
             {
-                HandleDisconnect();
+                HandleDisconnect(client);
             }
         }
 
@@ -188,8 +199,8 @@ namespace math_combat
                     {
                         var m = _json.Deserialize<RoomCreatedMsg>(json);
                         room_number = m.roomId;
-                        // 切換到 RoomPage
-                        roomPage?.BeginInvoke(new Action(() =>
+                        // 切換到 RoomPage（用 homePage.BeginInvoke，它是目前可見視窗）
+                        homePage?.BeginInvoke(new Action(() =>
                             SwitchToForm(homePage, roomPage)));
                         break;
                     }
@@ -223,9 +234,17 @@ namespace math_combat
                             wins2        = m.wins2;
                         }
 
-                        // 切換到 RoomPage
-                        roomPage?.BeginInvoke(new Action(() =>
-                            SwitchToForm(homePage, roomPage)));
+                        // 如果已經在 RoomPage，直接更新 UI；否則切換視窗
+                        if (currentPage == PageState.Room)
+                        {
+                            UpdateRoomUI();
+                        }
+                        else
+                        {
+                            Form activeForm = GetActiveForm();
+                            activeForm?.BeginInvoke(new Action(() =>
+                                SwitchToForm(activeForm, roomPage)));
+                        }
                         break;
                     }
 
@@ -236,6 +255,11 @@ namespace math_combat
                         hostName       = m.player1 ?? "";
                         player2Name    = m.player2 ?? "";
                         spectatorNames = m.spectators ?? new List<string>();
+                        
+                        // 動態更新是否為觀戰者與房主的角色狀態
+                        isSpectator = spectatorNames.Contains(player_name);
+                        isHost      = (!isSpectator && hostName == player_name);
+
                         UpdateRoomUI();
                         break;
                     }
@@ -275,17 +299,19 @@ namespace math_combat
                     // ── 回合開始（Server 下發牌組）──────────────────────────
                     case "ROUND_START":
                     {
+                        if (currentPage == PageState.Result || currentPage == PageState.Home) break;
                         var m = _json.Deserialize<RoundStartMsg>(json);
                         currentRound = m.round;
                         currentCards = m.cards ?? new List<string>();
                         gamePage?.BeginInvoke(new Action(() =>
-                            gamePage.OnRoundStart(m.round, m.seconds, m.cards)));
+                            gamePage.OnRoundStart(m.round, m.seconds, currentCards)));
                         break;
                     }
 
                     // ── 回合結算 ─────────────────────────────────────────────
                     case "ROUND_RESULT":
                     {
+                        if (currentPage == PageState.Result || currentPage == PageState.Home) break;
                         var m = _json.Deserialize<RoundResultMsg>(json);
                         wins1 = m.wins1;
                         wins2 = m.wins2;
@@ -323,7 +349,23 @@ namespace math_combat
                         secs           = m.seconds;
                         hostReady      = false;
                         clientReady    = false;
-                        UpdateRoomUI();
+
+                        // 重置回到等待室時，動態更新是否為觀戰者與房主的角色狀態
+                        isSpectator = spectatorNames.Contains(player_name);
+                        isHost      = (!isSpectator && hostName == player_name);
+
+                        if (currentPage == PageState.Game)
+                        {
+                            // 如果仍在遊戲進行中（例如遊戲被中斷或強行重置），則返回房間
+                            gamePage?.BeginInvoke(new Action(() =>
+                                SwitchToForm(gamePage, roomPage)));
+                        }
+                        else if (currentPage == PageState.Room)
+                        {
+                            UpdateRoomUI();
+                        }
+                        // 如果目前已經在 ResultPage 結算畫面，則不主動切換視窗！
+                        // 讓玩家在結算頁面各自點選「回到房間」或「回到首頁」！
                         break;
                     }
 
@@ -331,7 +373,7 @@ namespace math_combat
                     case "PLAYER_LEFT":
                     {
                         var m = _json.Deserialize<PlayerLeftMsg>(json);
-                        if (gamePage != null && gamePage.Visible)
+                        if (currentPage == PageState.Game)
                         {
                             opponentDisconnected = true;
                         }
@@ -365,7 +407,7 @@ namespace math_combat
                     case "GAME_ABORTED":
                     {
                         var m = _json.Deserialize<GameAbortedMsg>(json);
-                        Form activeForm = gamePage?.Visible == true ? (Form)gamePage : roomPage;
+                        Form activeForm = GetActiveForm();
                         activeForm?.BeginInvoke(new Action(() =>
                         {
                             MessageBox.Show(m.message ?? "對戰已中止。", "對戰中止",
@@ -417,13 +459,24 @@ namespace math_combat
                     break;
 
                 case "ROOM_ID_IN_USE":
-                case "NAME_IN_USE":
                 case "ROOM_FULL":
                     homePage?.BeginInvoke(new Action(() =>
                     {
                         MessageBox.Show(text, "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        if (roomPage?.Visible == true)
+                        if (currentPage == PageState.Room)
                             SwitchToForm(roomPage, homePage);
+                        homePage.ResetToRoomInput();
+                    }));
+                    CleanupNetwork();
+                    break;
+
+                case "NAME_IN_USE":
+                    homePage?.BeginInvoke(new Action(() =>
+                    {
+                        MessageBox.Show(text, "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        if (currentPage == PageState.Room)
+                            SwitchToForm(roomPage, homePage);
+                        homePage.ResetToNameInput();
                     }));
                     CleanupNetwork();
                     break;
@@ -434,20 +487,24 @@ namespace math_combat
             }
         }
 
-        private static void HandleDisconnect()
+        private static void HandleDisconnect(TcpClient client)
         {
+            // 如果斷線的 client 不是目前正活躍的 client，代表這是舊連線的結束，直接忽略
+            if (_tcp != client) return;
+
             if (!isConnected) return;
             isConnected = false;
 
-            if (gamePage?.Visible == true)
+            if (currentPage == PageState.Game)
             {
                 opponentDisconnected = true;
             }
             else
             {
                 ShowInfo("與 Server 的連線已中斷。");
-                roomPage?.BeginInvoke(new Action(() =>
-                    SwitchToForm(roomPage, homePage)));
+                Form activeForm = GetActiveForm();
+                activeForm?.BeginInvoke(new Action(() =>
+                    SwitchToForm(activeForm, homePage)));
             }
             CleanupNetwork();
         }
@@ -487,7 +544,9 @@ namespace math_combat
         /// <summary>遊戲結束後直接離開</summary>
         public static void SendLeaveAfterGame()
         {
-            SendJson(new LeaveAfterGameMsg());
+            isConnected = false; // 避免背景接收執行緒誤判為非自願斷線而跳出中斷對話框
+            try { SendJson(new LeaveAfterGameMsg()); } catch { }
+            CleanupNetwork();
         }
 
         /// <summary>更新房間設定（只有 Player1 可送）</summary>
@@ -500,6 +559,7 @@ namespace math_combat
         /// <summary>通知 Server 離開，然後清理本機連線</summary>
         public static void SendLeaveAndCleanup()
         {
+            isConnected = false; // 避免背景接收執行緒誤判為非自願斷線而跳出中斷對話框
             try { SendJson(new LeaveMsg()); } catch { }
             CleanupNetwork();
         }
@@ -546,16 +606,16 @@ namespace math_combat
 
         private static void ShowError(string msg)
         {
-            Form target = (Form)(gamePage?.Visible == true ? gamePage :
-                                 roomPage?.Visible == true ? (Form)roomPage : homePage);
+            Form target = currentPage == PageState.Game ? (Form)gamePage :
+                          currentPage == PageState.Room ? (Form)roomPage : homePage;
             target?.BeginInvoke(new Action(() =>
                 MessageBox.Show(msg, "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error)));
         }
 
         private static void ShowInfo(string msg)
         {
-            Form target = (Form)(gamePage?.Visible == true ? gamePage :
-                                 roomPage?.Visible == true ? (Form)roomPage : homePage);
+            Form target = currentPage == PageState.Game ? (Form)gamePage :
+                          currentPage == PageState.Room ? (Form)roomPage : homePage;
             target?.BeginInvoke(new Action(() =>
                 MessageBox.Show(msg, "通知", MessageBoxButtons.OK, MessageBoxIcon.Information)));
         }
@@ -564,6 +624,14 @@ namespace math_combat
         //  視窗切換
         // ══════════════════════════════════════════════════════════════════════
 
+        public static Form GetActiveForm()
+        {
+            if (currentPage == PageState.Game) return gamePage;
+            if (currentPage == PageState.Result) return resultPage;
+            if (currentPage == PageState.Room) return roomPage;
+            return homePage;
+        }
+
         public static void SwitchToForm(Form currentForm, Form targetForm)
         {
             if (currentForm == null || targetForm == null) return;
@@ -571,10 +639,27 @@ namespace math_combat
             targetForm.Location      = currentForm.Location;
             targetForm.Size          = currentForm.Size;
 
-            if (currentForm.Owner != null)
-                targetForm.Owner = currentForm.Owner;
+            // 避免視窗擁有權限產生循環引用（例如主視窗擁有自己），這會導致 WinForms 內部佈局當機或死循環
+            if (targetForm == homePage)
+            {
+                targetForm.Owner = null;
+            }
             else
-                targetForm.Owner = currentForm;
+            {
+                if (currentForm.Owner != null && currentForm.Owner != targetForm)
+                {
+                    targetForm.Owner = currentForm.Owner;
+                }
+                else
+                {
+                    targetForm.Owner = currentForm;
+                }
+            }
+
+            if (targetForm is HomePage)        currentPage = PageState.Home;
+            else if (targetForm is RoomPage)   currentPage = PageState.Room;
+            else if (targetForm is GamePage)   currentPage = PageState.Game;
+            else if (targetForm is ResultPage) currentPage = PageState.Result;
 
             targetForm.Show();
             currentForm.Hide();
@@ -668,6 +753,7 @@ namespace math_combat
         public static List<Card> BuildHandFromCards(List<string> cardValues)
         {
             var hand = new List<Card>();
+            if (cardValues == null) return hand;
             foreach (var val in cardValues)
             {
                 Card found = CardDatabase.FirstOrDefault(c => c.Value == val);
