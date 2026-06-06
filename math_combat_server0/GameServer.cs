@@ -35,13 +35,17 @@ namespace math_combat_server
         public bool Player1Ready { get; set; } = false;
         public bool Player2Ready { get; set; } = false;
 
+        // 用於保護 Player1/Player2/Spectators 狀態變更的鎖對象
+        public readonly object RoomLock = new object();
+
         public double? Score1 { get; set; }
         public double? Score2 { get; set; }
         public int Wins1 { get; set; } = 0;
         public int Wins2 { get; set; } = 0;
 
-        // 儲存本回合房主手牌，觀戰者用
+        // 儲存本回合雙方手牌，觀戰者用
         public List<string> LastHand1 { get; set; } = new List<string>();
+        public List<string> LastHand2 { get; set; } = new List<string>();
 
         // 儲存雙方出牌算式，回合結算後廣播給觀戰者
         public string Expression1 { get; set; } = "";
@@ -297,23 +301,48 @@ namespace math_combat_server
 
             if (!room.PlayersFull)
             {
-                room.Player2 = this;
-                _playerIndex = 2;
-                room.Player1Ready = false;
-                room.Player2Ready = false;
-
-                Send(new
+                if (room.Player1 == null)
                 {
-                    type = "ROOM_JOINED",
-                    role = "player",
-                    opponent = room.Player1 != null ? room.Player1.Name : "",
-                    rounds = room.MaxRounds,
-                    seconds = room.Seconds
-                });
+                    // 防禦性處理：P1 不存在（理論上應由 PromoteSpectator 補，但做雙重保障）
+                    room.Player1 = this;
+                    _playerIndex = 1;
+                    room.Player1Ready = false;
+                    room.Player2Ready = false;
 
-                BroadcastRoomInfo();
-                BroadcastReadyState();
-                Form1.Instance.Log("[JOIN] " + name + " 加入 " + roomId + "（玩家2）", LogType.Success);
+                    Send(new
+                    {
+                        type = "ROOM_JOINED",
+                        role = "host",
+                        opponent = room.Player2 != null ? room.Player2.Name : "",
+                        rounds = room.MaxRounds,
+                        seconds = room.Seconds
+                    });
+
+                    BroadcastRoomInfo();
+                    BroadcastReadyState();
+                    Form1.Instance.Log("[JOIN] " + name + " 加入 " + roomId + "（遞補為房主）", LogType.Warning);
+                }
+                else
+                {
+                    // 正常情況：P2 空位，新玩家加入
+                    room.Player2 = this;
+                    _playerIndex = 2;
+                    room.Player1Ready = false;
+                    room.Player2Ready = false;
+
+                    Send(new
+                    {
+                        type = "ROOM_JOINED",
+                        role = "player",
+                        opponent = room.Player1 != null ? room.Player1.Name : "",
+                        rounds = room.MaxRounds,
+                        seconds = room.Seconds
+                    });
+
+                    BroadcastRoomInfo();
+                    BroadcastReadyState();
+                    Form1.Instance.Log("[JOIN] " + name + " 加入 " + roomId + "（玩家2）", LogType.Success);
+                }
             }
             else
             {
@@ -700,10 +729,8 @@ namespace math_combat_server
 
                 room.Broadcast(new { type = "PLAYER_LEFT", name = Name });
 
-                if (_playerIndex == 1) room.Player1 = null;
-                else room.Player2 = null;
-
-                await PromoteSpectator(room);
+                // 把「清空位置」和「遞補」封裝在同一個原子操作裡
+                await PromoteSpectator(room, _playerIndex);
 
                 if (room.Player1 == null && room.Player2 == null && room.Spectators.Count == 0)
                     CleanupRoom(room);
@@ -717,22 +744,27 @@ namespace math_combat_server
             GameServer.UpdateUI();
         }
 
-        private static async Task PromoteSpectator(Room room)
+        private static async Task PromoteSpectator(Room room, int leavingPlayerIndex)
         {
-            lock (room.Spectators)
+            lock (room.RoomLock)
             {
-                // 先找現有玩家遞補房主
+                // Step 1: 清空離開玩家的位置（和下面的遞補在同一個 lock 裡，不會被其他 thread 切中）
+                if (leavingPlayerIndex == 1) room.Player1 = null;
+                else room.Player2 = null;
+
+                // Step 2: 優先 1：玩家2 升為房主
                 if (room.Player1 == null && room.Player2 != null)
                 {
-                    // 玩家2升為房主
                     room.Player1 = room.Player2;
                     room.Player1._playerIndex = 1;
                     room.Player2 = null;
                     room.Player1Ready = false;
+                    room.Player2Ready = false;
                     Form1.Instance.Log("[PROMOTE] " + room.Player1.Name + " 由玩家2升為房主", LogType.Warning);
+                    room.Player1.Send(new { type = "PROMOTED", role = "host" });
                 }
 
-                // 玩家位還缺，從觀戰者補
+                // Step 3: 優先 2：觀戰者遞補房主（P1 仍空）
                 if (room.Player1 == null && room.Spectators.Count > 0)
                 {
                     var newHost = room.Spectators[0];
@@ -740,9 +772,12 @@ namespace math_combat_server
                     room.Player1 = newHost;
                     newHost._playerIndex = 1;
                     room.Player1Ready = false;
+                    room.Player2Ready = false;
                     Form1.Instance.Log("[PROMOTE] " + newHost.Name + " 由觀戰遞補為房主", LogType.Warning);
+                    newHost.Send(new { type = "PROMOTED", role = "host" });
                 }
 
+                // Step 4: 優先 3：觀戰者遞補玩家2（P2 空）
                 if (room.Player2 == null && room.Spectators.Count > 0)
                 {
                     var newP2 = room.Spectators[0];
@@ -751,9 +786,11 @@ namespace math_combat_server
                     newP2._playerIndex = 2;
                     room.Player2Ready = false;
                     Form1.Instance.Log("[PROMOTE] " + newP2.Name + " 由觀戰遞補為玩家2", LogType.Warning);
+                    newP2.Send(new { type = "PROMOTED", role = "player" });
                 }
             }
             room.State = RoomState.WAITING;
+            BroadcastRoomInfoFor(room);
             await Task.CompletedTask;
         }
 
