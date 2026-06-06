@@ -235,7 +235,13 @@ namespace math_combat
                         }
 
                         // 如果已經在 RoomPage，直接更新 UI；否則切換視窗
-                        if (currentPage == PageState.Room)
+                        if (isSpectator && (m.state == "PLAYING" || m.state == "ROUND_RESULT"))
+                        {
+                            Form activeForm = GetActiveForm();
+                            activeForm?.BeginInvoke(new Action(() =>
+                                SwitchToForm(activeForm, gamePage)));
+                        }
+                        else if (currentPage == PageState.Room)
                         {
                             UpdateRoomUI();
                         }
@@ -303,8 +309,16 @@ namespace math_combat
                         var m = _json.Deserialize<RoundStartMsg>(json);
                         currentRound = m.round;
                         currentCards = m.cards ?? new List<string>();
-                        gamePage?.BeginInvoke(new Action(() =>
-                            gamePage.OnRoundStart(m.round, m.seconds, currentCards)));
+
+                        Form activeForm = GetActiveForm();
+                        activeForm?.BeginInvoke(new Action(() =>
+                        {
+                            if (currentPage != PageState.Game)
+                            {
+                                SwitchToForm(activeForm, gamePage);
+                            }
+                            gamePage.OnRoundStart(m.round, m.seconds, currentCards);
+                        }));
                         break;
                     }
 
@@ -470,6 +484,18 @@ namespace math_combat
                     CleanupNetwork();
                     break;
 
+                case "GAME_IN_PROGRESS":
+                    homePage?.BeginInvoke(new Action(() =>
+                    {
+                        MessageBox.Show("該房間正在對戰中，無法加入。\n請等待對戰結束後再試。",
+                            "正在對戰中", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        if (currentPage == PageState.Room)
+                            SwitchToForm(roomPage, homePage);
+                        homePage.ResetToRoomInput();
+                    }));
+                    CleanupNetwork();
+                    break;
+
                 case "NAME_IN_USE":
                     homePage?.BeginInvoke(new Action(() =>
                     {
@@ -528,11 +554,11 @@ namespace math_combat
             SendJson(clientReady ? (object)new ReadyMsg() : new UnreadyMsg());
         }
 
-        /// <summary>送出本回合得分給 Server</summary>
-        public static void SendScore(int round, double score)
+        /// <summary>送出本回合得分給 Server（附帶出牌算式，供觀戰者顯示）</summary>
+        public static void SendScore(int round, double score, string expression = "")
         {
             if (!isConnected) return;
-            SendJson(new SubmitScoreMsg { round = round, score = score });
+            SendJson(new SubmitScoreMsg { round = round, score = score, expression = expression });
         }
 
         /// <summary>遊戲結束後回到大廳</summary>

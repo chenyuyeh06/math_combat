@@ -60,8 +60,9 @@ namespace math_combat
     public class SubmitScoreMsg : NetworkMessage
     {
         public SubmitScoreMsg() { type = "SUBMIT_SCORE"; }
-        public int    round { get; set; }
-        public double score { get; set; }
+        public int    round      { get; set; }
+        public double score      { get; set; }
+        public string expression { get; set; } // 出牌算式，例如 "3 + 5 * 2"
     }
 
     /// <summary>遊戲結束後回到大廳（送到 RoomPage）</summary>
@@ -108,6 +109,7 @@ namespace math_combat
         public int    wins1          { get; set; }
         public int    wins2          { get; set; }
         public int    spectatorCount { get; set; }
+        public string state          { get; set; }
     }
 
     /// <summary>房間資訊（玩家名稱、觀戰者列表）</summary>
@@ -156,6 +158,8 @@ namespace math_combat
         public string result        { get; set; } // "WIN" / "LOSE" / "DRAW"
         public int    wins1         { get; set; }
         public int    wins2         { get; set; }
+        public string expression1   { get; set; } // Player1 出牌算式（給觀戰者顯示）
+        public string expression2   { get; set; } // Player2 出牌算式（給觀戰者顯示）
     }
 
     /// <summary>通知進入下一回合</summary>

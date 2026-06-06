@@ -23,6 +23,9 @@ namespace math_combat
         private bool   _scoreSubmitted  = false;
         private System.Windows.Forms.Timer _roundTimer;
 
+        // 觀戰者等待遮罩
+        private Label _spectatorWaitLabel = null;
+
         public GamePage(HomePage homePage)
         {
             InitializeComponent();
@@ -58,6 +61,25 @@ namespace math_combat
             DealCardsFromServer(cardValues);
             UpdateActionButtons();
 
+            if (GameUnits.isSpectator)
+            {
+                // 觀戰者：顯示初始牌陣（唯讀），不啟動計時器
+                tableLayout_HandCards.Visible = true;
+                tableLayout_BoardCards.Visible = true;
+                // 強制重繪，確保卡牌圖片正確顯示
+                tableLayout_HandCards.PerformLayout();
+                tableLayout_HandCards.Refresh();
+                tableLayout_BoardCards.PerformLayout();
+                tableLayout_BoardCards.Refresh();
+                ShowSpectatorHandLabel(GetP1Name());
+
+                // 【診斷】在視窗標題顯示牌組資訊（確認後可移除）
+                int cardCount = cardValues?.Count ?? 0;
+                string cardStr = cardValues != null ? string.Join(",", cardValues) : "null";
+                this.Text = $"[觀戰] 牌數:{cardCount} 牌:{cardStr}";
+                return;
+            }
+
             // 啟動倒數計時
             StartRoundTimer(secCount);
         }
@@ -67,11 +89,27 @@ namespace math_combat
         {
             StopRoundTimer();
 
-            string resultText = m.result == "WIN"  ? "🏆 本回合獲勝！" :
-                                m.result == "LOSE" ? "💀 本回合落敗！" : "🤝 平手！";
+            // 觀戰者收到結算時，手牌區與盤面繼續保持顯示（初始牌陣，唯讀）
 
-            string msg = $"{resultText}\n\n你的得分：{m.yourScore}\n對手得分：{m.opponentScore}\n\n" +
-                         $"目前比數　{GetP1Name()} {m.wins1} : {m.wins2} {GetP2Name()}";
+            string resultText;
+            if (GameUnits.isSpectator)
+            {
+                // 觀戰者顯示雙方出牌算式
+                string expr1 = string.IsNullOrEmpty(m.expression1) ? "（未出牌 / 逾時）" : m.expression1;
+                string expr2 = string.IsNullOrEmpty(m.expression2) ? "（未出牌 / 逾時）" : m.expression2;
+                resultText = $"🏆 {GetP1Name()} 出牌：{expr1}  =  {m.yourScore}\n" +
+                             $"🏆 {GetP2Name()} 出牌：{expr2}  =  {m.opponentScore}";
+            }
+            else
+            {
+                resultText = m.result == "WIN"  ? "🏆 本回合獲勝！" :
+                             m.result == "LOSE" ? "💀 本回合落敗！" : "🤝 平手！";
+            }
+
+            string msg = GameUnits.isSpectator
+                ? $"{resultText}\n\n目前比數　{GetP1Name()} {m.wins1} : {m.wins2} {GetP2Name()}"
+                : $"{resultText}\n\n你的得分：{m.yourScore}\n對手得分：{m.opponentScore}\n\n" +
+                  $"目前比數　{GetP1Name()} {m.wins1} : {m.wins2} {GetP2Name()}";
 
             MessageBox.Show(msg, $"第 {m.round} 回合結果", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
@@ -337,10 +375,10 @@ namespace math_combat
 
             MessageBox.Show($"{expression} = {resultStr}", "出牌結果");
 
-            // 送分給 Server
+            // 送分給 Server（附帶出牌算式）
             _scoreSubmitted = true;
             StopRoundTimer();
-            GameUnits.SendScore(_currentRound, result);
+            GameUnits.SendScore(_currentRound, result, expression);
             UpdateActionButtons();
         }
 
@@ -407,6 +445,83 @@ namespace math_combat
         {
             if (seconds != null)
                 seconds.Text = $"剩餘：{_timerSeconds}s";
+        }
+
+        // ══════════════════════════════════════════════════════════════════════
+        //  觀戰者等待遮罩 / 手牌說明標籤
+        // ══════════════════════════════════════════════════════════════════════
+
+        // 觀戰者「手牌說明」橫幅（顯示這是哪位玩家的手牌）
+        private Label _spectatorHandLabel = null;
+
+        private void ShowSpectatorHandLabel(string hostName)
+        {
+            // 移除舊標籤（換回合時重建）
+            if (_spectatorHandLabel != null)
+            {
+                this.Controls.Remove(_spectatorHandLabel);
+                _spectatorHandLabel.Dispose();
+                _spectatorHandLabel = null;
+            }
+
+            _spectatorHandLabel = new Label
+            {
+                Text      = $"👁 這是 {hostName} 的初始手牌（唯讀）",
+                Font      = new Font("jf open 粉圓 2.1", 13f, FontStyle.Bold),
+                ForeColor = Color.White,
+                BackColor = Color.FromArgb(180, 0, 100, 60),
+                TextAlign = ContentAlignment.MiddleCenter,
+                Dock      = DockStyle.None,
+                AutoSize  = false,
+            };
+
+            // 放在手牌區上方
+            int labelHeight = 32;
+            int left   = tableLayout_HandCards.Left;
+            int top    = tableLayout_HandCards.Top - labelHeight - 4;
+            int width  = tableLayout_HandCards.Width;
+            if (top < 0) top = 0;
+
+            _spectatorHandLabel.Bounds = new Rectangle(left, top, width, labelHeight);
+            this.Controls.Add(_spectatorHandLabel);
+            _spectatorHandLabel.BringToFront();
+        }
+
+        private void ShowSpectatorWaitOverlay()
+        {
+            HideSpectatorWaitOverlay(); // 避免重複建立
+
+            _spectatorWaitLabel = new Label
+            {
+                Text      = "⏳ 對戰進行中，等待結果...",
+                Font      = new Font("jf open 粉圓 2.1", 18f, FontStyle.Bold),
+                ForeColor = Color.White,
+                BackColor = Color.FromArgb(160, 0, 80, 80),
+                TextAlign = ContentAlignment.MiddleCenter,
+                Dock      = DockStyle.None,
+                AutoSize  = false,
+            };
+
+            // 覆蓋在整個手牌 + 盤面區域
+            int top    = tableLayout_HandCards.Top;
+            int left   = tableLayout_HandCards.Left;
+            int width  = tableLayout_HandCards.Width;
+            int height = tableLayout_HandCards.Height + panel_game_board.Height + 20;
+
+            _spectatorWaitLabel.Bounds = new Rectangle(left, top, width, height);
+            _spectatorWaitLabel.BringToFront();
+            this.Controls.Add(_spectatorWaitLabel);
+            _spectatorWaitLabel.BringToFront();
+        }
+
+        private void HideSpectatorWaitOverlay()
+        {
+            if (_spectatorWaitLabel != null)
+            {
+                this.Controls.Remove(_spectatorWaitLabel);
+                _spectatorWaitLabel.Dispose();
+                _spectatorWaitLabel = null;
+            }
         }
 
         // ══════════════════════════════════════════════════════════════════════
