@@ -37,6 +37,7 @@ namespace math_combat_server
 
         public double? Score1 { get; set; }
         public double? Score2 { get; set; }
+        public string Player1Expression { get; set; } = ""; // 房主本回合提交的算式
         public int Wins1 { get; set; } = 0;
         public int Wins2 { get; set; } = 0;
 
@@ -286,6 +287,12 @@ namespace math_combat_server
                 SendError("ROOM_FULL", "房間已滿");
                 return;
             }
+            if (room.State == RoomState.PLAYING || room.State == RoomState.ROUND_RESULT)
+            {
+                GameServer.UsedNames.TryRemove(name, out bool _);
+                SendError("GAME_IN_PROGRESS", "房間正在對戰中，無法加入");
+                return;
+            }
 
             Name  = name;
             _room = room;
@@ -428,7 +435,7 @@ namespace math_combat_server
             if (_room.Player2 != null)
                 _room.Player2.Send(new { type = "ROUND_START", round = _room.CurrentRound, seconds = _room.Seconds, cards = hand2 });
 
-            _room.BroadcastSpectators(new { type = "ROUND_START", round = _room.CurrentRound, seconds = _room.Seconds });
+            _room.BroadcastSpectators(new { type = "ROUND_START", round = _room.CurrentRound, seconds = _room.Seconds, cards = hand1 });
 
             _room.RoundStartTime = DateTime.Now;
             Form1.Instance.Log("[DEAL] " + _room.RoomId + " 第" + _room.CurrentRound + "回合發牌", LogType.Info);
@@ -497,17 +504,25 @@ namespace math_combat_server
             if (_room == null || _playerIndex == 0) { SendError("SPECTATOR_CANNOT_SUBMIT", "觀戰者不能提交分數"); return; }
             if (_room.State != RoomState.PLAYING)   { SendError("INVALID_STATE", "目前狀態不可執行此操作"); return; }
 
-            int    round = msg["round"] != null ? (int)msg["round"] : 0;
-            double score = msg["score"] != null ? (double)msg["score"] : -999;
+            int    round      = msg["round"]      != null ? (int)msg["round"]         : 0;
+            double score      = msg["score"]      != null ? (double)msg["score"]       : -999;
+            string expression = msg["expression"] != null ? msg["expression"].ToString() : "";
 
             if (round != _room.CurrentRound) { SendError("INVALID_SCORE", "已超過本回合截止時間"); return; }
 
             lock (_room)
             {
-                if (_playerIndex == 1) _room.Score1 = score;
-                else                   _room.Score2 = score;
+                if (_playerIndex == 1)
+                {
+                    _room.Score1 = score;
+                    _room.Player1Expression = expression; // 記錄房主算式供觀戰者查看
+                }
+                else
+                {
+                    _room.Score2 = score;
+                }
 
-                Form1.Instance.Log("[SCORE] " + Name + " 送出 " + score + "（回合" + round + "）", LogType.Score);
+                Form1.Instance.Log("[SCORE] " + Name + " 送出 " + score + "（回合" + round + "）" + (expression != "" ? " 算式：" + expression : ""), LogType.Score);
 
                 if (_room.Score1.HasValue && _room.Score2.HasValue)
                 {
@@ -537,7 +552,10 @@ namespace math_combat_server
 
             if (room.Player1 != null) room.Player1.Send(p1Msg);
             if (room.Player2 != null) room.Player2.Send(p2Msg);
-            room.BroadcastSpectators(p1Msg);
+            // 觀戰者收到房主視角結果（含房主算式）
+            var specMsg = new { type = "ROUND_RESULT", round = room.CurrentRound, yourScore = s1, opponentScore = s2, result = r1, wins1 = room.Wins1, wins2 = room.Wins2, expression = room.Player1Expression };
+            room.BroadcastSpectators(specMsg);
+            room.Player1Expression = ""; // 清除，準備下一回合
 
             room.Score1 = null;
             room.Score2 = null;
@@ -691,23 +709,41 @@ namespace math_combat_server
         {
             lock (room.Spectators)
             {
-                if (room.Player1 == null && room.Spectators.Count > 0)
+                // 房主缺席：優先由玩家2遞補，玩家2也不在才從觀戰遞補
+                if (room.Player1 == null)
                 {
-                    var newHost      = room.Spectators[0];
-                    room.Spectators.RemoveAt(0);
-                    room.Player1     = newHost;
-                    newHost._playerIndex = 1;
-                    room.Player1Ready = false;
-                    Form1.Instance.Log("[PROMOTE] " + newHost.Name + " 遞補為房主", LogType.Warning);
+                    if (room.Player2 != null)
+                    {
+                        // 玩家2升格為房主
+                        var promoted = room.Player2;
+                        room.Player1 = promoted;
+                        room.Player2 = null;
+                        promoted._playerIndex = 1;
+                        room.Player1Ready = false;
+                        room.Player2Ready = false;
+                        Form1.Instance.Log("[PROMOTE] " + promoted.Name + " 由玩家2升格為房主", LogType.Warning);
+                    }
+                    else if (room.Spectators.Count > 0)
+                    {
+                        // 無玩家2，從觀戰遞補房主
+                        var newHost = room.Spectators[0];
+                        room.Spectators.RemoveAt(0);
+                        room.Player1 = newHost;
+                        newHost._playerIndex = 1;
+                        room.Player1Ready = false;
+                        Form1.Instance.Log("[PROMOTE] " + newHost.Name + " 由觀戰遞補為房主", LogType.Warning);
+                    }
                 }
+
+                // 玩家2缺席：從觀戰遞補
                 if (room.Player2 == null && room.Spectators.Count > 0)
                 {
-                    var newP2        = room.Spectators[0];
+                    var newP2 = room.Spectators[0];
                     room.Spectators.RemoveAt(0);
-                    room.Player2     = newP2;
+                    room.Player2 = newP2;
                     newP2._playerIndex = 2;
                     room.Player2Ready = false;
-                    Form1.Instance.Log("[PROMOTE] " + newP2.Name + " 遞補為玩家2", LogType.Warning);
+                    Form1.Instance.Log("[PROMOTE] " + newP2.Name + " 由觀戰遞補為玩家2", LogType.Warning);
                 }
             }
             room.State = RoomState.WAITING;
